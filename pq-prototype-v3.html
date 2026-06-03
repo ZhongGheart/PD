@@ -29,6 +29,7 @@ html.has-scroll-lock, html.has-scroll-lock body { overflow:hidden; }
   --bamboo-pale: #EDF5EE;
   --gold: #B8860B;
   --gold-light: #D4A520;
+  --gold-dark: #996500;
   --gold-pale: #FEF5E7;
 
   /* ── 中性色阶 ── */
@@ -205,6 +206,11 @@ body {
   40%     { transform:translateX(6px); }
   60%     { transform:translateX(-4px); }
   80%     { transform:translateX(4px); }
+}
+/* ── 错误时正确答案提示光晕 ── */
+@keyframes correctGlow {
+  0%,100% { box-shadow:0 0 0 0 rgba(184,134,11,0); border-color:var(--gold); }
+  50%     { box-shadow:0 0 0 8px rgba(184,134,11,.22); border-color:var(--gold-light); }
 }
 /* ── 星星闪烁 ── */
 @keyframes starGlow {
@@ -507,9 +513,19 @@ body {
   transform:scale(1.05);
 }
 .char-btn--used {
-  opacity:.28; pointer-events:none;
-  background:var(--paper-2); border-color:transparent;
-  transform: scale(.95);
+  pointer-events:none;
+  background:var(--paper-2);
+  border-color:transparent;
+  color:var(--text-tertiary);
+  transform:scale(.95);
+}
+/* V4: 易错字/正确答案高亮按钮 */
+.char-btn--hint {
+  border:2px solid var(--gold);
+  background:linear-gradient(135deg, rgba(184,134,11,.14), rgba(218,165,32,.10));
+  color:var(--gold-dark);
+  font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(184,134,11,.08);
 }
 
 /* ====== 列表项 (语义化 ul>li) ====== */
@@ -801,9 +817,17 @@ body {
   box-shadow:0 2px 12px rgba(42,62,92,.4);
 }
 [data-theme="dark"] .char-btn--used {
-  opacity:.15;
   background:#1C2029;
   border-color:transparent;
+  color:#5A6270;
+  transform:scale(.95);
+}
+[data-theme="dark"] .char-btn--hint {
+  border-color:var(--gold);
+  background:linear-gradient(135deg, rgba(184,134,11,.18), rgba(218,165,32,.12));
+  color:#E8C870;
+  font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(184,134,11,.12);
 }
 
 /* Dark mode: Word matching options */
@@ -979,6 +1003,353 @@ body {
 [data-theme="dark"] .tab-bar__item.active .tab-icon { fill:#D0D6E0; }
 [data-theme="dark"] .tab-label { color:#5A6270; }
 [data-theme="dark"] .tab-bar__item.active .tab-label { color:#E0E4EB; }
+
+/* ======== V4: 全局搜索栏 ======== */
+.search-bar {
+  margin:0 16px 12px; display:flex; align-items:center; gap:8px;
+  background:var(--bg-card); border:1px solid var(--border-light);
+  border-radius:var(--radius-lg); padding:0 14px; height:40px;
+  transition:border-color var(--duration-fast) var(--ease-fast);
+}
+.search-bar:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+.search-icon { width:18px; height:18px; fill:none; stroke:var(--text-muted); stroke-width:2; flex-shrink:0; }
+.search-input {
+  flex:1; border:none; outline:none; background:transparent;
+  font-size:15px; color:var(--text-primary); font-family:var(--font-family-primary);
+}
+.search-input::placeholder { color:var(--text-muted); font-size:14px; }
+.search-clear {
+  width:22px; height:22px; border:none; background:var(--paper-2);
+  border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  padding:0; flex-shrink:0; -webkit-transition:background var(--duration-fast);
+  transition:background var(--duration-fast);
+}
+.search-clear:hover { background:var(--border-light); }
+.search-clear svg { width:12px; height:12px; stroke:var(--text-muted); stroke-width:2; }
+
+/* ======== V4: 今日3题快捷卡片 ======== */
+.quick-quiz-card {
+  margin:0 16px 12px; background:linear-gradient(135deg,#3A5080,#1E3A5F);
+  border-radius:var(--radius-lg); padding:16px; position:relative; overflow:hidden;
+  cursor:pointer; -webkit-transition:transform var(--duration-normal) var(--ease-spring);
+  transition:transform var(--duration-normal) var(--ease-spring);
+}
+.quick-quiz-card:hover { transform:translateY(-2px); }
+.quick-quiz-card:active { transform:scale(.98); }
+.quick-quiz-card::before {
+  content:''; position:absolute; top:-20px; right:-20px;
+  width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.06);
+}
+.quick-quiz-card::after {
+  content:''; position:absolute; bottom:-10px; left:30%;
+  width:60px; height:60px; border-radius:50%; background:rgba(184,134,11,.08);
+}
+.quick-q-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; position:relative; z-index:1; }
+.quick-q-badge {
+  font-size:11px; font-weight:600; color:#fff; background:rgba(255,255,255,.16);
+  padding:3px 10px; border-radius:20px; letter-spacing:.5px;
+}
+.quick-q-timer {
+  font-size:11px; color:rgba(255,255,255,.55);
+}
+.quick-q-title { font-size:17px; font-weight:700; color:#fff; margin-bottom:4px; position:relative; z-index:1; }
+.quick-q-desc { font-size:13px; color:rgba(255,255,255,.7); line-height:1.5; position:relative; z-index:1; }
+.quick-q-meta { display:flex; align-items:center; gap:12px; margin-top:12px; position:relative; z-index:1; }
+.quick-q-tag {
+  font-size:11px; color:rgba(255,255,255,.6); background:rgba(255,255,255,.1);
+  padding:2px 8px; border-radius:10px;
+}
+.quick-q-btn {
+  display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600;
+  color:#FFD666; background:none; border:none; cursor:pointer;
+  padding:0; margin-left:auto; -webkit-transition:gap var(--duration-fast);
+  transition:gap var(--duration-fast);
+}
+.quick-quiz-card:hover .quick-q-btn { gap:8px; }
+
+/* ======== V4: 高考考点进度条（替换原统计卡片）====== */
+.exam-progress-section { margin:0 16px 16px; }
+.exam-progress-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.exam-progress-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+.exam-progress-link { font-size:12px; color:var(--primary); text-decoration:none; }
+.exam-progress-link:active { opacity:.7; }
+.ep-row { margin-bottom:12px; }
+.ep-label { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.ep-name { font-size:13px; font-weight:500; color:var(--text-secondary); }
+.ep-value { font-size:13px; font-weight:700; }
+.ep-track {
+  height:8px; background:var(--paper-2); border-radius:4px; overflow:hidden;
+}
+.ep-fill { height:100%; border-radius:4px; -webkit-transition:width .8s cubic-bezier(.25,.46,.45,.94);
+  transition:width .8s cubic-bezier(.25,.46,.45,.94); }
+.ep-fill--bamboo { background:linear-gradient(90deg,var(--bamboo),#5CB885); }
+.ep-fill--cinnabar { background:linear-gradient(90deg,var(--cinnabar),#EF7B7B); }
+.ep-fill--gold { background:linear-gradient(90deg,var(--gold),#E8C547); }
+.ep-fill--primary { background:linear-gradient(90deg,var(--primary),#60A5FA); }
+
+/* 薄弱点提示条 */
+.weakness-alert {
+  margin:0 16px 12px; padding:10px 14px; background:var(--cinnabar-pale);
+  border-left:3px solid var(--cinnabar); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  display:flex; align-items:center; gap:8px;
+}
+.weakness-icon { font-size:16px; flex-shrink:0; }
+.weakness-text { font-size:12px; color:var(--cinnabar); flex:1; line-height:1.5; }
+.weakness-action {
+  font-size:12px; font-weight:600; color:var(--cinnabar); background:none; border:none;
+  cursor:pointer; white-space:nowrap; padding:0;
+}
+
+/* ======== V4: 雷达图（个人中心）====== */
+.radar-section { margin:0 16px 16px; background:var(--bg-card); border-radius:var(--radius-lg); padding:16px; }
+.radar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.radar-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+.radar-subtitle { font-size:11px; color:var(--text-muted); }
+.radar-wrap { position:relative; width:100%; aspect-ratio:1; max-height:220px; margin:0 auto; }
+.radar-canvas { width:100%; height:100%; }
+/* SVG radar fallback */
+.radar-svg { width:100%; height:100%; overflow:visible; }
+.radar-bg-polygon { fill:var(--paper-2); stroke:var(--border-light); stroke-width:.5; }
+.radar-data-polygon { fill:rgba(59,130,246,.15); stroke:var(--primary); stroke-width:1.5; fill-opacity:.35; }
+.radar-axis { stroke:var(--border-light); stroke-width:.5; }
+.radar-point { fill:var(--primary); r:3.5; }
+.radar-label { font-size:10px; fill:var(--text-secondary); font-weight:500; text-anchor:middle; pointer-events:none; }
+.radar-percent { font-size:9px; fill:var(--primary); font-weight:700; text-anchor:middle; }
+
+/* 雷达图下方维度列表 */
+.radar-dims { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.radar-dim-item {
+  display:flex; align-items:center; gap:8px; padding:8px 10px;
+  background:var(--paper-2); border-radius:var(--radius-sm);
+}
+.radar-dim-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.radar-dim-info { flex:1; min-width:0; }
+.radar-dim-name { font-size:12px; color:var(--text-secondary); }
+.radar-dim-val { font-size:14px; font-weight:700; }
+.radar-dim-arrow { color:var(--text-muted); font-size:12px; }
+
+/* ======== V4: 积分与徽章 ======== */
+.points-bar {
+  margin:0 16px 12px; padding:12px 16px; background:linear-gradient(135deg,var(--gold-light),#FFF8E7);
+  border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between;
+}
+.points-info { display:flex; align-items:center; gap:10px; }
+.points-icon { font-size:22px; }
+.points-detail {}
+.points-num { font-size:20px; font-weight:800; color:var(--gold-dark); }
+.points-label { font-size:11px; color:var(--text-muted); }
+.points-shop-btn {
+  font-size:12px; font-weight:600; color:var(--gold-dark); background:#fff;
+  border:1px solid rgba(184,134,11,.3); padding:5px 12px; border-radius:20px;
+  cursor:pointer; white-space:nowrap; -webkit-transition:background var(--duration-fast);
+  transition:background var(--duration-fast);
+}
+.points-shop-btn:active { background:var(--paper-2); }
+
+/* 徽章区域 */
+.badge-section { margin:0 16px 16px; }
+.badge-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.badge-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+.badge-more { font-size:12px; color:var(--text-muted); }
+.badge-grid { display:flex; gap:10px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; scrollbar-width:none; }
+.badge-grid::-webkit-scrollbar { display:none; }
+.badge-item {
+  flex-shrink:0; width:72px; display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.badge-icon-wrap {
+  width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:24px; position:relative;
+}
+.badge-item.is-unlocked .badge-icon-wrap { background:linear-gradient(135deg,var(--gold-light),#FFE4A0); }
+.badge-item.is-locked .badge-icon-wrap { background:var(--paper-2); filter:grayscale(1); opacity:.5; }
+.badge-item.is-locked .badge-icon-wrap span { filter:grayscale(1); opacity:.5; }
+.badge-name { font-size:10px; color:var(--text-muted); text-align:center; line-height:1.2; }
+.badge-item.is-unlocked .badge-name { color:var(--text-secondary); font-weight:500; }
+
+/* ======== V4: 错题本增强 ======== */
+.wrong-retry-banner {
+  margin:0 16px 12px; padding:12px 16px; background:linear-gradient(135deg,#FEF3EE,#FFF0ED);
+  border-radius:var(--radius-md); display:flex; align-items:center; gap:12px;
+}
+.wrong-retry-icon { font-size:28px; flex-shrink:0; }
+.wrong-retry-info { flex:1; }
+.wrong-retry-title { font-size:14px; font-weight:600; color:var(--text-primary); }
+.wrong-retry-desc { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.wrong-retry-btn {
+  font-size:13px; font-weight:600; color:#fff; background:var(--cinnabar);
+  border:none; padding:8px 16px; border-radius:20px; cursor:pointer;
+  white-space:nowrap; -webkit-transition:filter var(--duration-fast);
+  transition:filter var(--duration-fast);
+}
+.wrong-retry-btn:active { filter:brightness(.9); }
+
+/* 遗忘曲线提醒 */
+.ebbinghaus-tip {
+  margin:0 16px 12px; padding:10px 14px; background:#F0FAF4;
+  border-radius:var(--radius-sm); display:flex; align-items:center; gap:8px;
+}
+.eb-icon { font-size:16px; flex-shrink:0; }
+.eb-text { font-size:12px; color:var(--bamboo-dark); flex:1; line-height:1.5; }
+.eb-count { font-size:13px; font-weight:700; color:var(--bamboo); }
+
+/* 错题分类筛选标签 */
+.wrong-cat-tags { display:flex; gap:8px; padding:0 16px 10px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.wrong-cat-tags::-webkit-scrollbar { display:none; }
+.wrong-cat-tag {
+  font-size:12px; padding:5px 14px; border-radius:20px; white-space:nowrap;
+  border:1px solid var(--border-light); background:var(--bg-card); color:var(--text-secondary);
+  cursor:pointer; -webkit-transition:all var(--duration-fast); transition:all var(--duration-fast);
+}
+.wrong-cat-tag.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.wrong-cat-tag:active { transform:scale(.96); }
+
+/* ======== V4: 答题优化 — 即时反馈 ======== /* 
+.quiz-instant-hint {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(.88);
+  background:#fff; color:var(--text-primary);
+  font-size:15px; font-weight:700;
+  padding:14px 28px;
+  border-radius:20px;
+  z-index:200; pointer-events:none; opacity:0;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  -webkit-transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;
+}
+.quiz-instant-hint.show {
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+.quiz-instant-hint__icon {
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.quiz-instant-hint.correct {
+  background:linear-gradient(135deg,#2D8B6A,#22A06B);
+  color:#fff;
+  box-shadow:0 6px 24px rgba(45,138,106,.4), 0 2px 8px rgba(45,106,79,.25);
+}
+.quiz-instant-hint.correct .quiz-instant-hint__icon {
+  background:rgba(255,255,255,.25); color:#fff;
+}
+.quiz-instant-hint.wrong {
+  background:linear-gradient(135deg,#E85D5D,#D94343);
+  color:#fff;
+  box-shadow:0 6px 24px rgba(232,93,93,.35), 0 2px 8px rgba(196,69,54,.25);
+}
+.quiz-instant-hint.wrong .quiz-instant-hint__icon {
+  background:rgba(255,255,255,.25); color:#fff;
+}
+[data-theme="dark"] .quiz-instant-hint {
+  background:#1E242E;
+  border-color:#333B48;
+  color:#E0E4EB;
+}
+[data-theme="dark"] .quiz-instant-hint.correct {
+  background:#152a1f;
+  border-color:#2D6A4F;
+}
+[data-theme="dark"] .quiz-instant-hint.wrong {
+  background:#2a1818;
+  border-color:#8B3A3A;
+}
+
+/* 解析折叠状态 */
+.quiz-explain.collapsed .explain-text { max-height:0; overflow:hidden; -webkit-transition:max-height .3s; transition:max-height .3s; }
+.quiz-explain:not(.collapsed) .explain-text { max-height:300px; overflow-y:auto; }
+.explain-toggle {
+  font-size:12px; color:var(--primary); cursor:pointer; display:inline-flex; align-items:center; gap:4px;
+  user-select:none; margin-top:6px;
+}
+.explain-toggle svg { width:14px; height:14px; -webkit-transition:transform .2s; transition:transform .2s; }
+.explain-toggle.open svg { transform:rotate(180deg); }
+
+/* ======== V4: 新手引导 ======== */
+.onboarding-overlay {
+  position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.55);
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  padding:0 24px 48px; pointer-events:auto;
+}
+.ob-step { text-align:center; max-width:280px; }
+.ob-artwork { font-size:56px; margin-bottom:16px; }
+.ob-title { font-size:22px; font-weight:700; color:#fff; margin-bottom:8px; }
+.ob-desc { font-size:14px; color:rgba(255,255,255,.75); line-height:1.6; margin-bottom:28px; }
+.ob-dots { display:flex; gap:8px; justify-content:center; margin-bottom:24px; }
+.ob-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); }
+.ob-dot.active { background:#fff; width:20px; border-radius:4px; -webkit-transition:all .3s; transition:all .3s; }
+.ob-next-btn {
+  width:100%; height:48px; border-radius:24px; border:none; font-size:16px; font-weight:600;
+  color:var(--ink); background:#fff; cursor:pointer;
+  -webkit-transition:transform var(--duration-fast); transition:transform var(--duration-fast);
+}
+.ob-next-btn:active { transform:scale(.97); }
+.ob-skip { margin-top:16px; font-size:13px; color:rgba(255,255,255,.55); background:none; border:none; cursor:pointer; }
+
+/* ======== V4: 护眼模式 & 设置项 ======== */
+.eye-care-indicator {
+  display:flex; align-items:center; gap:8px; padding:10px 16px;
+  background:linear-gradient(135deg,#FFF5E6,#FFEDD5); border-radius:var(--radius-sm);
+  margin:0 16px 12px;
+}
+.eci-icon { font-size:18px; }
+.eci-text { flex:1; font-size:12px; color:#8B6914; }
+.eci-status { font-size:12px; font-weight:600; color:#B8860B; }
+
+.rest-reminder {
+  position:fixed; top:0; left:0; right:0; z-index:9000;
+  background:linear-gradient(135deg,var(--gold),#E8C547); padding:12px 16px;
+  display:flex; align-items:center; gap:10px; -webkit-animation:slideDown .3s ease;
+  animation:slideDown .3s ease;
+}
+@keyframes slideDown { from{transform:translateY(-100%);} to{transform:translateY(0);} }
+.rr-text { flex:1; font-size:13px; color:var(--ink); font-weight:500; }
+.rr-dismiss { font-size:13px; color:var(--ink); font-weight:600; background:rgba(255,255,255,.4); border:none; padding:5px 14px; border-radius:16px; cursor:pointer; }
+
+/* 隐私模式开关 */
+.privacy-mode-toggle { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:var(--bg-card); border-radius:var(--radius-md); margin:0 16px 12px; }
+.pmt-info { display:flex; align-items:center; gap:10px; flex:1; }
+.pmt-icon { font-size:20px; }
+.pmt-text { }
+.pmt-title { font-size:14px; font-weight:500; color:var(--text-primary); }
+.pmt-desc { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+/* ======== V4: 登录页增强 ======== */
+.login-guest-btn {
+  width:100%; height:48px; border-radius:24px; border:1px solid var(--border-dark);
+  background:var(--bg-card); color:var(--text-primary); font-size:16px; font-weight:500;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:12px; -webkit-transition:background var(--duration-fast);
+  transition:background var(--duration-fast);
+}
+.login-guest-btn:active { background:var(--paper-2); }
+.login-divider { display:flex; align-items:center; gap:12px; margin:20px 0; color:var(--text-muted); font-size:12px; }
+.login-divider::before, .login-divider::after { content:''; flex:1; height:.5px; background:var(--border-light); }
+
+/* ======== V4 Dark Mode Overrides for new components ======== */
+[data-theme="dark"] .search-bar { background:#1C2029; border-color:#2D3340; }
+[data-theme="dark"] .search-input { color:#E0E4EB; }
+[data-theme="dark"] .quick-quiz-card { background:linear-gradient(135deg,#2A3E5C,#1a2d42); }
+[data-theme="dark"] .weakness-alert { background:rgba(196,69,54,.1); border-left-color:var(--cinnabar-light); }
+[data-theme="dark"] .weakness-text { color:var(--cinnabar-light); }
+[data-theme="dark"] .points-bar { background:linear-gradient(135deg,rgba(184,134,11,.12),rgba(184,134,11,.06)); }
+[data-theme="dark"] .points-num { color:#D4A520; }
+[data-theme="dark"] .points-shop-btn { color:#D4A520; border-color:rgba(184,134,11,.2); background:transparent; }
+[data-theme="dark"] .wrong-retry-banner { background:linear-gradient(135deg,rgba(196,69,54,.08),rgba(196,69,54,.04)); }
+[data-theme="dark"] .ebbinghaus-tip { background:rgba(45,106,79,.1); }
+[data-theme="dark"] .eb-text { color:#5CB885; }
+[data-theme="dark"] .wrong-cat-tag { background:#1C2029; border-color:#333B48; color:#B0BAC8; }
+[data-theme="dark"] .wrong-cat-tag.active { background:var(--primary); }
+[data-theme="dark"] .radar-section { background:#1C2029; }
+[data-theme="dark"] .radar-bg-polygon { fill:#22272F; stroke:#333B48; }
+[data-theme="dark"] .radar-axis { stroke:#333B48; }
+[data-theme="dark"] .radar-dim-item { background:#1a1f28; }
+[data-theme="dark"] .eye-care-indicator { background:linear-gradient(135deg,rgba(184,134,11,.1),rgba(184,134,11,.05)); }
+[data-theme="dark"] .privacy-mode-toggle { background:#1C2029; }
+[data-theme="dark"] .login-guest-btn { background:#262C38; border-color:#38404E; color:#E0E4EB; }
+[data-theme="dark"] .login-guest-btn:active { background:#1C2029; }
+[data-theme="dark"] .ep-track { background:#262C38; }
 
 /* Feature Cards */
 .feature-cards { padding:0 16px; display:flex; flex-direction:column; gap:12px; }
@@ -1629,13 +2000,19 @@ body {
   </div>
 
   <div class="login-actions" role="group" aria-label="登录方式">
-    <button class="login-btn--apple" onclick="navigateTo('page-home')" type="button">
+    <button class="login-btn--apple" onclick="navigateTo('page-home'); showToast('✅ Apple 登录成功'); setTimeout(showOnboarding,600)" type="button">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
       Apple 一键登录
     </button>
-    <button class="login-btn--wechat" onclick="navigateTo('page-home')" type="button">
+    <button class="login-btn--wechat" onclick="navigateTo('page-home'); showToast('✅ 微信登录成功'); setTimeout(showOnboarding,600)" type="button">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8.69 2C4.33 2 .75 5.15.75 9c0 2.19 1.17 4.14 2.98 5.31L3 17l3.03-1.52A8.4 8.4 0 008.69 16c.3 0 .6-.02.89-.05C8.58 14.86 8 13.5 8 12c0-3.87 3.58-7 8-7 .43 0 .85.04 1.26.1C16.47 2.96 12.91 2 8.69 2zM6 6a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zM16 7c-3.87 0-7 2.69-7 6s3.13 6 7 6c.76 0 1.49-.1 2.17-.29L21 20l-.58-2.41A5.9 5.9 0 0023 13c0-3.31-3.13-6-7-6zm-2.5 3a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2z"/></svg>
       微信授权登录
+    </button>
+    <!-- V4: 游客模式 -->
+    <div class="login-divider">或</div>
+    <button class="login-guest-btn" onclick="navigateTo('page-home'); showToast('👋 以游客身份进入，部分功能受限'); setTimeout(showOnboarding,500)" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      先逛逛（游客模式）
     </button>
   </div>
 
@@ -1664,7 +2041,33 @@ body {
   </div>
 
   <main class="content">
-    <!-- Hero Card -->
+    <!-- V4: Global Search Bar -->
+    <div class="search-bar" role="search" aria-label="全局搜索">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16 16l4 4"/></svg>
+      <input class="search-input" type="text" placeholder="搜诗词、作者、字词…" id="globalSearchInput"
+        onfocus="showToast('🔍 支持搜索：诗词名 / 作者 / 字词考点')" oninput="handleSearch(this.value)" />
+      <button class="search-clear" onclick="document.getElementById('globalSearchInput').value='';this.style.display='none';" type="button" style="display:none;" aria-label="清除">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </div>
+
+    <!-- V4: Quick Quiz Card — "今日3题" -->
+    <article class="quick-quiz-card" onclick="navigateTo('page-quiz')" tabindex="0" role="link" aria-label="今日3题快速闯关">
+      <div class="quick-q-header">
+        <span class="quick-q-badge">⚡ AI 精选</span>
+        <span class="quick-q-timer">⏱ 预计 5 分钟</span>
+      </div>
+      <div class="quick-q-title">今日 3 题</div>
+      <div class="quick-q-desc">根据你的薄弱点智能推送，课间碎片时间刚好做完</div>
+      <div class="quick-q-meta">
+        <span class="quick-q-tag">📝 默写 ×1</span>
+        <span class="quick-q-tag">📚 实词 ×1</span>
+        <span class="quick-q-tag">🎯 考点 ×1</span>
+        <button class="quick-q-btn" type="button">开始挑战 →</button>
+      </div>
+    </article>
+
+    <!-- Hero Card (保留) -->
     <article class="hero-card" onclick="navigateTo('page-chapters')" tabindex="0" role="link" aria-label="开始今日推荐闯关：静夜思·李白">
       <div class="hero-card__inner">
         <span class="hero-badge">🔥 今日推荐</span>
@@ -1673,6 +2076,33 @@ body {
         <button class="hero-cta" type="button">立即进入 →</button>
       </div>
     </article>
+
+    <!-- V4: 高考考点进度（替换原统计卡片） -->
+    <section class="exam-progress-section" aria-label="高考考点掌握进度">
+      <div class="exam-progress-head">
+        <h3 class="exam-progress-title">📊 考点掌握度</h3>
+        <a href="#" onclick="event.preventDefault(); navigateTo('page-profile')" class="exam-progress-link">详细报告 →</a>
+      </div>
+      <div class="ep-row">
+        <div class="ep-label"><span class="ep-name">必修上 · 高频考点</span><span class="ep-value" style="color:var(--bamboo);">82%</span></div>
+        <div class="ep-track"><div class="ep-fill ep-fill--bamboo" style="width:82%;"></div></div>
+      </div>
+      <div class="ep-row">
+        <div class="ep-label"><span class="ep-name">文言实词 · 掌握率</span><span class="ep-value" style="color:var(--cinnabar);">65%</span></div>
+        <div class="ep-track"><div class="ep-fill ep-fill--cinnabar" style="width:65%;"></div></div>
+      </div>
+      <div class="ep-row">
+        <div class="ep-label"><span class="ep-name">古诗词默写 · 正确率</span><span class="ep-value" style="color:var(--gold);">78%</span></div>
+        <div class="ep-track"><div class="ep-fill ep-fill--gold" style="width:78%;"></div></div>
+      </div>
+    </section>
+
+    <!-- V4: 薄弱点提示 -->
+    <div class="weakness-alert" role="alert" aria-label="薄弱点提醒">
+      <span class="weakness-icon" aria-hidden="true">⚠️</span>
+      <span class="weakness-text">薄弱点：<strong>文言实词</strong>（65%）— 建议 10 分钟专项练习</span>
+      <button class="weakness-action" onclick="navigateTo('page-chapter')" type="button">去练 →</button>
+    </div>
 
     <!-- Feature Cards -->
     <div class="section-header">
@@ -1699,27 +2129,49 @@ body {
         </div>
         <svg width="20" height="20" fill="none" stroke="#B8860B" stroke-width="2" style="flex-shrink:0;" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
       </div>
+    </div>
 
-      <!-- Quick Stats -->
-      <div class="stats-grid" style="margin-top:8px;">
-        <div class="stat-item">
-          <div class="stat-value" style="color:var(--ink);">12</div>
-          <div class="stat-label">累计闯关</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" style="color:var(--bamboo);">186</div>
-          <div class="stat-label">做题量</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" style="color:var(--gold);">7天</div>
-          <div class="stat-label">连续打卡</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" style="color:var(--cinnabar);">82%</div>
-          <div class="stat-label">正确率</div>
+    <!-- V4: 积分条 -->
+    <div class="points-bar">
+      <div class="points-info">
+        <span class="points-icon" aria-hidden="true">🪙</span>
+        <div class="points-detail">
+          <div class="points-num">2,680</div>
+          <div class="points-label">提分积分</div>
         </div>
       </div>
+      <button class="points-shop-btn" onclick="showToast('🎁 积分商城开发中…')" type="button">去兑换 →</button>
     </div>
+
+    <!-- V4: 学霸徽章 -->
+    <section class="badge-section" aria-label="我的徽章">
+      <div class="badge-header">
+        <h3 class="badge-title">🏅 我的徽章</h3>
+        <span class="badge-more">共 5 枚</span>
+      </div>
+      <div class="badge-grid">
+        <div class="badge-item is-unlocked">
+          <div class="badge-icon-wrap"><span>✍️</span></div>
+          <span class="badge-name">默写王者</span>
+        </div>
+        <div class="badge-item is-unlocked">
+          <div class="badge-icon-wrap"><span>🔥</span></div>
+          <span class="badge-name">7日连胜</span>
+        </div>
+        <div class="badge-item is-unlocked">
+          <div class="badge-icon-wrap"><span>🎯</span></div>
+          <span class="badge-name">考点达人</span>
+        </div>
+        <div class="badge-item is-locked">
+          <div class="badge-icon-wrap"><span>📚</span></div>
+          <span class="badge-name">实词大师</span>
+        </div>
+        <div class="badge-item is-locked">
+          <div class="badge-icon-wrap"><span>💎</span></div>
+          <span class="badge-name">全册通关</span>
+        </div>
+      </div>
+    </section>
 
     <!-- Dark Mode Toggle (NEW in V3) -->
     <div style="padding:12px 16px 0; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
@@ -2074,29 +2526,41 @@ body {
       </p>
     </div>
 
-    <!-- Character pool for fill-blank (with deselect support) -->
-    <div class="quiz-options" role="group" aria-label="候选字符池，点击选择填入空格">
+    <!-- Character pool for fill-blank (V4: 易错字优先排序) -->
+    <div class="quiz-options" role="group" aria-label="候选字符池，易错字靠前，点击选择填入空格">
       <div class="quiz-char-pool">
-        <button class="char-btn" type="button" aria-label="选择：霜">霜</button>
+        <button class="char-btn" type="button" aria-label="选择：雪（易错）">雪</button>
+        <button class="char-btn char-btn--hint" type="button" aria-label="选择：霜（正确答案）">霜</button>
+        <button class="char-btn" type="button" aria-label="选择：露（易混）">露</button>
         <button class="char-btn char-btn--used" disabled type="button" aria-disabled="true" aria-label="光 已使用">光</button>
-        <button class="char-btn" type="button" aria-label="选择：雪">雪</button>
-        <button class="char-btn" type="button" aria-label="选择：露">露</button>
         <button class="char-btn" type="button" aria-label="选择：冰">冰</button>
         <button class="char-btn" type="button" aria-label="选择：雾">雾</button>
         <button class="char-btn" type="button" aria-label="选择：银">银</button>
         <button class="char-btn" type="button" aria-label="选择：华">华</button>
       </div>
+      <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;">💡 易错字已排在前两位</p>
     </div>
 
-    <!-- Explanation area (hidden by default) -->
-    <aside class="quiz-explain" id="quizExplain" aria-live="polite">
+    <!-- V4: 即时反馈提示条 -->
+    <div class="quiz-instant-hint" id="instantHint"><span class="quiz-instant-hint__icon"></span><span class="quiz-instant-hint__text"></span></div>
+
+    <!-- Explanation area (V4: 默认折叠) -->
+    <aside class="quiz-explain collapsed" id="quizExplain" aria-live="polite">
       <h4 class="explain-title">✓ 正确答案解析</h4>
-      <p class="explain-text">
-        <strong>正确答案：霜</strong><br><br>
-        本句运用<strong>比喻</strong>修辞手法，将月光比作地上的霜。表现了诗人客居他乡时的孤独与思乡之情。<br><br>
-        <strong>【易错点】</strong>"霜"字常被误写为"雪"、"光"等字，需注意诗句原貌。<br>
-        <strong>【高考考点】</strong>名句默写、比喻手法辨析、情感主旨分析
-      </p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--bamboo);">本题考点：比喻修辞 + 名句默写</span>
+        <button class="explain-toggle" onclick="toggleExplain(this)" type="button">
+          展开解析 <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+      </div>
+      <div class="explain-text" style="max-height:0;overflow:hidden;transition:max-height .3s ease;">
+        <p class="explain-text" style="max-height:none;">
+          <strong>正确答案：霜</strong><br><br>
+          本句运用<strong>比喻</strong>修辞手法，将月光比作地上的霜。表现了诗人客居他乡时的孤独与思乡之情。<br><br>
+          <strong>【易错点】</strong>"霜"字常被误写为"雪"、"光"等字，需注意诗句原貌。<br>
+          <strong>【高考考点】</strong>名句默写、比喻手法辨析、情感主旨分析
+        </p>
+      </div>
     </aside>
   </main>
 
@@ -2486,6 +2950,32 @@ body {
     </div>
   </div>
 
+  <!-- V4: 一键重练所有错题 -->
+  <div class="wrong-retry-banner" onclick="showToast('🎯 开始重练 15 道待巩固错题…'); setTimeout(function(){navigateTo('page-quiz')},800)" tabindex="0" role="link">
+    <span class="wrong-retry-icon" aria-hidden="true">🔄</span>
+    <div class="wrong-retry-info">
+      <div class="wrong-retry-title">一键重练所有错题</div>
+      <div class="wrong-retry-desc">15 道待巩固 · AI 按遗忘曲线排序</div>
+    </div>
+    <button class="wrong-retry-btn" type="button">开始 →</button>
+  </div>
+
+  <!-- V4: 艾宾浩斯遗忘曲线提醒 -->
+  <div class="ebbinghaus-tip" role="status">
+    <span class="eb-icon" aria-hidden="true">🧠</span>
+    <span class="eb-text"><strong>3 道错题</strong> 到复习时间了（艾宾浩斯曲线）</span>
+    <span class="eb-count">立即复习 ›</span>
+  </div>
+
+  <!-- V4: 按考点分类筛选 -->
+  <div class="wrong-cat-tags" role="tablist" aria-label="按考点分类筛选">
+    <button class="wrong-cat-tag active" role="tab" aria-selected="true" onclick="selectWrongCat(this)" type="button">全部 (23)</button>
+    <button class="wrong-cat-tag" role="tab" aria-selected="false" onclick="selectWrongCat(this)" type="button">默写 (10)</button>
+    <button class="wrong-cat-tag" role="tab" aria-selected="false" onclick="selectWrongCat(this)" type="button">实词 (8)</button>
+    <button class="wrong-cat-tag" role="tab" aria-selected="false" onclick="selectWrongCat(this)" type="button">手法 (3)</button>
+    <button class="wrong-cat-tag" role="tab" aria-selected="false" onclick="selectWrongCat(this)" type="button">意境 (2)</button>
+  </div>
+
   <ul class="content" aria-label="错题列表">
     <li class="wrong-card">
       <div class="wrong-card-head">
@@ -2547,8 +3037,8 @@ body {
 
   <!-- Bottom actions -->
   <footer class="bottom-action" style="display:flex; gap:10px;">
-    <button class="btn btn--secondary" style="flex:1;" onclick="showToast('已导出至文件')" type="button">一键导出</button>
-    <button class="btn btn--cinnabar" style="flex:1;" onclick="showToast('已清空')" type="button">清空错题本</button>
+    <button class="btn btn--secondary" style="flex:1;" onclick="showToast('📄 已导出至文件（含错题+解析+考点标签）')" type="button">一键导出</button>
+    <button class="btn btn--cinnabar" style="flex:1;" onclick="showToast('🎯 开始重练所有错题…'); setTimeout(function(){navigateTo('page-quiz')},600)" type="button">一键重练</button>
   </footer>
 </section>
 
@@ -2805,24 +3295,87 @@ body {
   </header>
 
   <main class="content" style="padding-top:20px;">
-    <!-- Stats Row -->
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-value" style="color:#fff;background:#3A5080;padding:4px 12px;border-radius:8px;display:inline-block;font-size:16px;">12</div>
-        <div class="stat-label">累计闯关</div>
+    <!-- V4: 雷达图 — 四维能力分析 -->
+    <section class="radar-section" aria-label="四维能力雷达图">
+      <div class="radar-header">
+        <h3 class="radar-title">📊 能力分析</h3>
+        <span class="radar-subtitle">点击薄弱项 → 跳转专项</span>
       </div>
-      <div class="stat-item">
-        <div class="stat-value" style="color:#fff;background:var(--bamboo);padding:4px 12px;border-radius:8px;display:inline-block;font-size:16px;">186</div>
-        <div class="stat-label">做题量</div>
+      <div class="radar-wrap">
+        <svg class="radar-svg" viewBox="0 0 200 200" aria-label="诗词填字90% 文言字词65% 意境解谜75% 考点试炼80%">
+          <!-- Background grid (5 levels) -->
+          <polygon class="radar-bg-polygon" points="100,15 175,62 155,152 45,152 25,62"/>
+          <polygon class="radar-bg-polygon" points="100,32 158,70 143,139 57,139 42,70"/>
+          <polygon class="radar-bg-polygon" points="100,49 141,78 131,126 69,126 59,78"/>
+          <polygon class="radar-bg-polygon" points="100,66 124,86 118,113 82,113 76,86"/>
+          <polygon class="radar-bg-polygon" points="100,83 108,94 106,101 94,101 92,94"/>
+          <!-- Axes -->
+          <line class="radar-axis" x1="100" y1="100" x2="100" y2="15"/>
+          <line class="radar-axis" x1="100" y1="100" x2="175" y2="62"/>
+          <line class="radar-axis" x1="100" y1="100" x2="155" y2="152"/>
+          <line class="radar-axis" x1="100" y1="100" x2="45" y2="152"/>
+          <line class="radar-axis" x1="100" y1="100" x2="25" y2="62"/>
+          <!-- Data polygon (90%, 65%, 75%, 80% → scale from center) -->
+          <!-- Top(填字90%): y = 100 - 85*0.9 = 23.5; Right-top(字词65%): 100+75*0.65=148.75, 100-38*0.65=75.3; Right-bottom(意境75%): 100+55*0.75=141.25, 100+52*0.75=139; Left-bottom(考试80%): 100-55*0.8=56, 100+52*0.8=141.6; Left-top: 100-75*0.8=40, 100-38*0.8=69.6 -->
+          <polygon class="radar-data-polygon" points="100,24 149,75 141,139 56,142 40,70"/>
+          <!-- Data points -->
+          <circle class="radar-point" cx="100" cy="24" onclick="showToast('📝 诗词填字：掌握率 90%')" style="cursor:pointer;"/>
+          <circle class="radar-point" cx="149" cy="75" onclick="navigateTo('page-quiz-word'); showToast('📚 跳转文言实词专项')" style="cursor:pointer;"/>
+          <circle class="radar-point" cx="141" cy="139" onclick="navigateTo('page-quiz-mood'); showToast('🎭 跳转意境解谜专项')" style="cursor:pointer;"/>
+          <circle class="radar-point" cx="56" cy="142" onclick="navigateTo('page-quiz-exam'); showToast('🏆 跳转考点试炼专项')" style="cursor:pointer;"/>
+          <circle class="radar-point" cx="40" cy="70" style="cursor:pointer;" onclick="showToast('✅ 综合能力：80%')"/>
+          <!-- Labels -->
+          <text class="radar-percent" x="100" y="14">90%</text>
+          <text class="radar-label" x="100" y="6">填字</text>
+          <text class="radar-percent" x="180" y="58">65%</text>
+              <text class="radar-label" x="185" y="54">字词</text>
+              <text class="radar-percent" x="160" y="162">75%</text>
+              <text class="radar-label" x="157" y="172">意境</text>
+              <text class="radar-percent" x="48" y="165">80%</text>
+              <text class="radar-label" x="43" y="175">考试</text>
+              <text class="radar-percent" x="18" y="60" style="font-size:10px;">—</text>
+              <text class="radar-label" x="12" y="54">综合</text>
+        </svg>
       </div>
-      <div class="stat-item">
-        <div class="stat-value" style="color:#fff;background:var(--gold);padding:4px 12px;border-radius:8px;display:inline-block;font-size:16px;">82%</div>
-        <div class="stat-label">正确率</div>
+      <!-- 维度列表 -->
+      <div class="radar-dims">
+        <div class="radar-dim-item" onclick="navigateTo('page-quiz')" tabindex="0" role="link" aria-label="诗词填字专项">
+          <span class="radar-dim-dot" style="background:var(--bamboo);"></span>
+          <div class="radar-dim-info"><div class="radar-dim-name">诗词填字</div></div>
+          <span class="radar-dim-val" style="color:var(--bamboo);">90%</span>
+          <span class="radar-dim-arrow">›</span>
+        </div>
+        <div class="radar-dim-item" onclick="navigateTo('page-quiz-word')" tabindex="0" role="link" aria-label="文言字词专项（薄弱）">
+          <span class="radar-dim-dot" style="background:var(--cinnabar);"></span>
+          <div class="radar-dim-info"><div class="radar-dim-name">文言实词</div><div class="radar-dim-val" style="font-size:11px;color:var(--cinnabar);">薄弱 ⚠</div></div>
+          <span class="radar-dim-val" style="color:var(--cinnabar);">65%</span>
+          <span class="radar-dim-arrow">›</span>
+        </div>
+        <div class="radar-dim-item" onclick="navigateTo('page-quiz-mood')" tabindex="0" role="link" aria-label="意境解谜专项">
+          <span class="radar-dim-dot" style="background:var(--gold);"></span>
+          <div class="radar-dim-info"><div class="radar-dim-name">意境解谜</div></div>
+          <span class="radar-dim-val" style="color:var(--gold);">75%</span>
+          <span class="radar-dim-arrow">›</span>
+        </div>
+        <div class="radar-dim-item" onclick="navigateTo('page-quiz-exam')" tabindex="0" role="link" aria-label="考点试炼专项">
+          <span class="radar-dim-dot" style="background:var(--primary);"></span>
+          <div class="radar-dim-info"><div class="radar-dim-name">考点试炼</div></div>
+          <span class="radar-dim-val" style="color:var(--primary);">80%</span>
+          <span class="radar-dim-arrow">›</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value" style="color:#fff;background:var(--cinnabar);padding:4px 12px;border-radius:8px;display:inline-block;font-size:16px;">7天</div>
-        <div class="stat-label">连续打卡</div>
+    </section>
+
+    <!-- V4: 积分条（个人中心） -->
+    <div class="points-bar">
+      <div class="points-info">
+        <span class="points-icon" aria-hidden="true">🪙</span>
+        <div class="points-detail">
+          <div class="points-num">2,680</div>
+          <div class="points-label">提分积分 · 本周+380</div>
+        </div>
       </div>
+      <button class="points-shop-btn" onclick="showToast('🎁 积分商城开发中…可兑换真题/手册/音频')" type="button">去兑换</button>
     </div>
 
     <!-- Menu Section: Learning -->
@@ -2871,6 +3424,35 @@ body {
             aria-label="切换夜间模式">
             <span id="profileThemeThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);transition:transform .28s cubic-bezier(.34,1.56,.64,1);"></span>
           </button>
+        </li>
+        <!-- V4: 护眼模式 -->
+        <li class="menu-item" onclick="showToast('✅ 已开启暖色护眼模式')" tabindex="0" role="link" aria-label="护眼模式">
+          <div class="menu-icon" style="background:#FFF5E6;" aria-hidden="true">👁️</div>
+          <span class="menu-text">护眼模式</span>
+          <span style="font-size:12px;color:var(--gold);margin-right:8px;">暖色调</span>
+          <svg width="16" height="16" fill="none" stroke="#9E9789" stroke-width="2" class="menu-arrow" aria-hidden="true"><path d="M6 12l4 4 8-8"/></svg>
+        </li>
+        <!-- V4: 隐私模式 -->
+        <div class="privacy-mode-toggle" role="switch" aria-checked="false" aria-label="隐私模式">
+          <div class="pmt-info">
+            <span class="pmt-icon" aria-hidden="true">🔒</span>
+            <div class="pmt-text">
+              <div class="pmt-title">隐私模式</div>
+              <div class="pmt-desc">图标伪装为计算器</div>
+            </div>
+          </div>
+          <button id="privacyToggle" onclick="togglePrivacyMode(this)" type="button"
+            style="width:44px;height:26px;border-radius:13px;border:none;background:var(--border-dark);position:relative;cursor:pointer;"
+            aria-label="切换隐私模式">
+            <span id="privacyThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);transition:transform .28s cubic-bezier(.34,1.56,.64,1);"></span>
+          </button>
+        </div>
+        <!-- V4: 离线下载 -->
+        <li class="menu-item" onclick="showToast('📥 必修上册已下载（离线可用）')" tabindex="0" role="link" aria-label="离线下载管理">
+          <div class="menu-icon" style="background:#EBF0FA;" aria-hidden="true">📥</div>
+          <span class="menu-text">离线下载</span>
+          <span style="font-size:12px;color:var(--bamboo);margin-right:8px;">已下载 1 册</span>
+          <svg width="16" height="16" fill="none" stroke="#9E9789" stroke-width="2" class="menu-arrow" aria-hidden="true"><path d="M6 12l4 4 8-8"/></svg>
         </li>
         <li class="menu-item" tabindex="0" role="link" aria-label="隐私政策">
           <div class="menu-icon" style="background:var(--paper-2);" aria-hidden="true">🛡️</div>
@@ -3310,6 +3892,40 @@ body {
 <!-- Toast Notification -->
 <div class="toast" id="toastEl" role="status" aria-live="polite"></div>
 
+<!-- V4: 新手引导遮罩层 (3步) -->
+<div class="onboarding-overlay" id="onboardingOverlay" style="display:none;" role="dialog" aria-label="新手引导">
+  <div class="ob-step" id="obStep1">
+    <div class="ob-artwork">📚</div>
+    <div class="ob-title">第一步：选教材，开始闯关</div>
+    <div class="ob-desc">选择你的语文教材版本，系统自动匹配高考考点题目，课间 10 分钟就能完成一组闯关。</div>
+    <div class="ob-dots"><span class="ob-dot active"></span><span class="ob-dot"></span><span class="ob-dot"></span></div>
+    <button class="ob-next-btn" onclick="nextObStep(2)" type="button">下一步</button>
+    <button class="ob-skip" onclick="closeOnboarding()" type="button">跳过</button>
+  </div>
+  <div class="ob-step" id="obStep2" style="display:none;">
+    <div class="ob-artwork">✍️</div>
+    <div class="ob-title">第二步：答题，即时反馈</div>
+    <div class="ob-desc">选完答案立刻知道对错，不用等提交。做错的题自动收入错题本，AI 按遗忘曲线提醒你复习。</div>
+    <div class="ob-dots"><span class="ob-dot"></span><span class="ob-dot active"></span><span class="ob-dot"></span></div>
+    <button class="ob-next-btn" onclick="nextObStep(3)" type="button">下一步</button>
+    <button class="ob-skip" onclick="closeOnboarding()" type="button">跳过</button>
+  </div>
+  <div class="ob-step" id="obStep3" style="display:none;">
+    <div class="ob-artwork">🎯</div>
+    <div class="ob-title">第三步：错题复盘，精准提分</div>
+    <div class="ob-desc">薄弱点一目了然，雷达图展示四维能力。一键重练所有错题，针对性补短板，快速提分！</div>
+    <div class="ob-dots"><span class="ob-dot"></span><span class="ob-dot"></span><span class="ob-dot active"></span></div>
+    <button class="ob-next-btn" onclick="closeOnboarding()" type="button">开始使用 🚀</button>
+  </div>
+</div>
+
+<!-- V4: 护眼休息提醒（默认隐藏） -->
+<div class="rest-reminder" id="restReminder" style="display:none;" role="alert" aria-label="护眼休息提醒">
+  <span style="font-size:18px;">👁️</span>
+  <span class="rr-text">已连续学习 20 分钟，休息 5 分钟保护眼睛吧～</span>
+  <button class="rr-dismiss" onclick="document.getElementById('restReminder').style.display='none'" type="button">知道了</button>
+</div>
+
 <!-- Page Navigation Sidebar (双击显示) -->
 <nav class="page-nav" id="pageNav" aria-label="页面快速导航" style="display:none;">
   <button class="pnav-btn is-active" onclick="navigateTo('page-launch')" type="button">启动</button>
@@ -3329,6 +3945,7 @@ body {
   <button class="pnav-btn" onclick="navigateTo('page-iap')" type="button">购买</button>
   <button class="pnav-btn" onclick="navigateTo('page-checkin')" type="button">打卡</button>
   <button class="pnav-btn" onclick="navigateTo('page-help')" type="button">帮助</button>
+  <button class="pnav-btn" onclick="showOnboarding()" type="button">引导</button>
 </nav>
 
 <!-- Close phone frame -->
@@ -3631,6 +4248,166 @@ function showSkeleton(containerSel, duration) {
   container.innerHTML = '<div class="skeleton" style="height:120px;width:80%;margin:0 auto;border-radius:12px;"></div>';
   setTimeout(() => { container.innerHTML = html; }, duration);
 }
+
+/* ======== V4: 新增 JS 函数 ======== */
+
+/* V4: 全局搜索 */
+function handleSearch(query) {
+  var clearBtn = document.querySelector('.search-clear');
+  if (clearBtn) clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+  if (query.length < 2) return;
+  // 模拟搜索结果提示
+  if (/登高|静夜|杜甫|李白/.test(query)) {
+    showToast('🔍 找到 ' + query + ' 相关内容：' + Math.floor(Math.random()*5+1) + ' 篇');
+  }
+}
+
+/* V4: 解析折叠/展开 */
+function toggleExplain(btn) {
+  var explain = btn.closest('.quiz-explain');
+  if (!explain) return;
+  explain.classList.toggle('collapsed');
+  var textEl = explain.querySelector('.explain-text');
+  if (explain.classList.contains('collapsed')) {
+    if (textEl) textEl.style.maxHeight = '0';
+    btn.innerHTML = '展开解析 <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+    btn.classList.remove('open');
+  } else {
+    if (textEl) textEl.style.maxHeight = '300px';
+    btn.innerHTML = '收起解析 <svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+    btn.classList.add('open');
+  }
+}
+
+/* V4: 错题本分类筛选 */
+function selectWrongCat(tag) {
+  var parent = tag.parentElement;
+  parent.querySelectorAll('.wrong-cat-tag').forEach(function(t) {
+    t.classList.remove('active'); t.setAttribute('aria-selected', 'false');
+  });
+  tag.classList.add('active'); tag.setAttribute('aria-selected', 'true');
+  showToast('📂 已切换到「' + tag.textContent.trim() + '」分类');
+}
+
+/* V4: 隐私模式开关 */
+let isPrivacyMode = false;
+function togglePrivacyMode(toggleBtn) {
+  isPrivacyMode = !isPrivacyMode;
+  var thumb = document.getElementById('privacyThumb');
+  if (thumb) thumb.style.transform = isPrivacyMode ? 'translateX(18px)' : '';
+  toggleBtn.setAttribute('aria-checked', String(isPrivacyMode));
+  showToast(isPrivacyMode ? '🔒 隐私模式已开启（图标伪装为计算器）' : '🔓 隐私模式已关闭');
+}
+
+/* V4: 新手引导 */
+let currentObStep = 1;
+function showOnboarding() {
+  // 检查是否已看过引导
+  if (localStorage && localStorage.getItem('pq_onboarding_done')) return;
+  var ob = document.getElementById('onboardingOverlay');
+  if (ob) {
+    ob.style.display = 'flex';
+    currentObStep = 1;
+    updateObDots();
+  }
+}
+function nextObStep(step) {
+  for (var i=1; i<=3; i++) {
+    var el = document.getElementById('obStep'+i);
+    if (el) el.style.display = i === step ? '' : 'none';
+  }
+  currentObStep = step;
+  updateObDots();
+}
+function updateObDots() {
+  var dots = document.querySelectorAll('#onboardingOverlay .ob-dot');
+  dots.forEach(function(d, idx) {
+    d.classList.toggle('active', idx === currentObStep - 1);
+  });
+}
+function closeOnboarding() {
+  var ob = document.getElementById('onboardingOverlay');
+  if (ob) ob.style.display = 'none';
+  try { localStorage.setItem('pq_onboarding_done', '1'); } catch(e){}
+}
+
+/* V4: 护眼休息提醒定时器（20分钟） */
+(function() {
+  let restTimer = null;
+  function startRestTimer() {
+    clearTimeout(restTimer);
+    restTimer = setTimeout(function() {
+      var reminder = document.getElementById('restReminder');
+      if (reminder) reminder.style.display = 'flex';
+    }, 20 * 60 * 1000); // 20分钟
+  }
+  // 页面可见时重置计时器
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) startRestTimer();
+  });
+  startRestTimer();
+})();
+
+/* V4: 自动深色模式（22点）*/
+(function() {
+  function checkAutoDark() {
+    var h = new Date().getHours();
+    if (h >= 22 || h < 6) {
+      if (!isDarkMode) toggleTheme();
+    }
+  }
+  checkAutoDark();
+  setInterval(checkAutoDark, 60000); // 每分钟检查一次
+})();
+
+/* V4: 即时反馈 — 字符按钮点击后显示对错 */
+(function() {
+  var originalHandler = null;
+  document.addEventListener('click', function(e) {
+    var charBtn = e.target.closest('.char-btn:not([disabled])');
+    if (!charBtn) return;
+
+    // 即时反馈
+    showInstantFeedback(charBtn);
+
+    // 如果是正确答案，延迟自动提交
+    if (charBtn.classList.contains('char-btn--hint')) {
+      setTimeout(function() {
+        var hint = document.getElementById('instantHint');
+        if (hint) {
+          hint.querySelector('.quiz-instant-hint__icon').textContent = '\u2713';
+          hint.querySelector('.quiz-instant-hint__text').textContent = '\u56de\u7b54\u6b63\u786e\uff01';
+          hint.className = 'quiz-instant-hint correct show';
+        }
+        setTimeout(function() { if(hint) hint.classList.remove('show'); }, 1500);
+      }, 400);
+    } else {
+      setTimeout(function() {
+        var hint = document.getElementById('instantHint');
+        if (hint) {
+          hint.querySelector('.quiz-instant-hint__icon').textContent = '\u00d7';
+          hint.querySelector('.quiz-instant-hint__text').textContent = '\u518d\u60f3\u60f3\u2026';
+          hint.className = 'quiz-instant-hint wrong show';
+        }
+        // 错误时短暂高亮正确答案提示
+        var correctBtn = document.querySelector('.char-btn--hint');
+        if (correctBtn && !correctBtn.disabled) {
+          correctBtn.style.animation = 'none';
+          correctBtn.offsetHeight; // force reflow
+          correctBtn.style.animation = 'correctGlow 1.2s ease .3s 2';
+          setTimeout(function() { correctBtn.style.animation = ''; }, 2800);
+        }
+        setTimeout(function() { if(hint) hint.classList.remove('show'); }, 1400);
+      }, 300);
+    }
+  }, true);
+
+  function showInstantFeedback(btn) {
+    var hint = document.getElementById('instantHint');
+    if (!hint) return;
+    // The actual feedback is shown in the click handler above with a delay to simulate "thinking"
+  }
+})();
 
 </script>
 </body>

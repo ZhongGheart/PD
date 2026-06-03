@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>诗途闯关 PQ — 高保真原型</title>
+<style>
+/* ====== Design Tokens ====== */
+:root {
+  --ink: #1B2A4A;
+  --ink-light: #2D3E5F;
+  --cinnabar: #C44536;
+  --cinnabar-light: #D9594B;
+  --bamboo: #2D6A4F;
+  --bamboo-light: #3D8B6A;
+  --gold: #B8860B;
+  --gold-light: #D4A520;
+  --paper: #FAF8F5;
+  --paper-2: #F5F2EC;
+  --border: #E8E4DC;
+  --border-dark: #D9D4CB;
+  --text-primary: #1C1C1E;
+  --text-secondary: #5C564D;
+  --text-muted: #9E9789;
+  --bg-app: #F2EDE6;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --safe-top: 54px;
+  --safe-bottom: 34px;
+  --tabbar-h: 83px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; background: #e0dcd5; color: var(--text-primary); display: flex; justify-content: center; min-height: 100vh; padding: 20px 16px; }
+
+/* iPhone Frame */
+.phone-frame {
+  width: 393px; height: 852px; background: var(--bg-app);
+  border-radius: 52px; overflow: hidden; position: relative;
+  box-shadow: 0 20px 60px rgba(27,42,74,.18), 0 4px 16px rgba(27,42,74,.08), inset 0 0 0 1px rgba(255,255,255,.3);
+  flex-shrink: 0;
+}
+.dynamic-island { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:126px;height:37px;background:#000;border-radius:22px;z-index:999; }
+
+/* Page System */
+.page { display:none; flex-direction:column; height:100%; width:100%; position:absolute;top:0;left:0; overflow:hidden; }
+.page.active { display:flex; animation: fadeIn .28s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* Status Bar */
+.status-bar { height:var(--safe-top); display:flex; align-items:flex-end; justify-content:space-between; padding:0 24px 8px; position:relative;z-index:100; font-size:14px;font-weight:600;color:var(--text-primary);flex-shrink:0; }
+.status-bar.light { color:#fff; }
+.status-time { font-size:15px;letter-spacing:.5px; }
+.status-icons { display:flex;gap:5px;align-items:center; }
+.status-icons svg { width:17px;height:17px; }
+
+/* Navigation Bar */
+.nav-bar { height:44px;display:flex;align-items:center;justify-content:center;padding:0 16px;position:relative;z-index:50;flex-shrink:0; background:var(--bg-app); }
+.nav-bar.transparent { background:transparent;position:absolute;top:var(--safe-top);left:0;right:0; }
+.nav-bar.white { background:#fff; border-bottom:.5px solid var(--border); }
+.nav-title { font-size:17px;font-weight:600;color:var(--text-primary); }
+.nav-left, .nav-right { position:absolute;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer; }
+.nav-left { left:0; }
+.nav-right { right:0; }
+.nav-back { width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round; }
+
+/* Content Area */
+.content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:env(safe-area-inset-bottom); }
+.content::-webkit-scrollbar { display:none; }
+
+/* Tab Bar */
+.tab-bar { height:var(--tabbar-h);background:rgba(250,248,245,.94);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--border);display:flex;align-items:flex-flex-start;padding-top:6px;z-index:200;flex-shrink:0;position:relative; }
+.tab-item { flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0 8px;-webkit-transition:all .2s;transition:all .2s; }
+.tab-icon { width:25px;height:25px; fill:var(--text-muted); -webkit-transition:all .2s; transition:all .2s; }
+.tab-item.active .tab-icon { fill:var(--ink); }
+.tab-label { font-size:10px;color:var(--text-muted);font-weight:500;-webkit-transition:color .2s;transition:color .2s; }
+.tab-item.active .tab-label { color:var(--ink);font-weight:600; }
+
+/* Cards */
+.card { background:#fff;border-radius:var(--radius-md);padding:16px;border:.5px solid var(--border); margin-bottom:12px; }
+.card-flat { background:transparent;border:none;padding:0;margin-bottom:12px; }
+
+/* Buttons */
+.btn { display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:var(--radius-lg);font-family:inherit;font-weight:600;cursor:pointer;-webkit-transition:all .2s;transition:all .2s; text-decoration:none; }
+.btn:active { transform:scale(.97); }
+.btn-primary { background:var(--ink);color:#fff;padding:14px 32px;font-size:16px;border-radius:var(--radius-xl);min-height:50px; letter-spacing:1px; }
+.btn-secondary { background:transparent;color:var(--ink);padding:13px 28px;font-size:15px;border:1.5px solid var(--ink);border-radius:var(--radius-lg); }
+.btn-cinnabar { background:var(--cinnabar);color:#fff;padding:14px 32px;font-size:16px;border-radius:var(--radius-xl);min-height:50px; }
+.btn-gold { background:linear-gradient(135deg,#B8860B,#DAA520);color:#fff;padding:14px 32px;font-size:16px;border-radius:var(--radius-xl);min-height:50px;box-shadow:0 4px 16px rgba(184,134,11,.3); }
+.btn-small { padding:8px 16px;font-size:13px;border-radius:var(--radius-md);min-height:34px; }
+.btn-block { width:100%; }
+
+/* Tags */
+.tag { display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600; }
+.tag-hot { background:#FDF0EE;color:var(--cinnabar); }
+.tag-high { background:#FEF5E7;color:var(--gold); }
+.tag-unlocked { background:#EDF5EE;color:var(--bamboo); }
+.tag-locked { background:var(--paper-2);color:var(--text-muted); }
+.tag-vip { background:linear-gradient(135deg,#B8860B,#DAA520);color:#fff; }
+
+/* Segmented Control */
+.segmented { display:flex;background:var(--paper-2);border-radius:10px;padding:3px;margin:0 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;}
+.segmented::-webkit-scrollbar { display:none; }
+.seg-item { flex:1;text-align:center;padding:8px 4px;font-size:13px;font-weight:500;color:var(--text-secondary);border-radius:8px;cursor:pointer;white-space:nowrap;-webkit-transition:all .2s;transition:all .2s;min-width:fit-content;padding:8px 12px; }
+.seg-item.active { background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.06); }
+
+/* Progress */
+.progress-ring { width:48px;height:48px; }
+.progress-text { font-size:13px;font-weight:600;color:var(--ink); }
+
+/* Stars */
+.stars { color:var(--gold);font-size:15px;letter-spacing:2px; }
+.stars-dim { color:var(--border-dark); }
+
+/* Input */
+.input-box { width:100%;border:1.5px solid var(--border-dark);border-radius:var(--radius-md);padding:14px 16px;font-size:16px;font-family:inherit;background:#fff;outline:none;-webkit-transition:border-color .2s;transition:border-color .2s; }
+.input-box:focus { border-color:var(--ink); }
+
+/* Option buttons */
+.option-btn { display:block;width:100%;padding:14px 16px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-md);margin-bottom:10px;font-size:15px;font-family:inherit;text-align:left;cursor:pointer;-webkit-transition:all .15s;transition:all .15s;color:var(--text-primary); }
+.option-btn:active { background:var(--paper-2);transform:scale(.99); }
+.option-btn.selected { border-color:var(--ink);background:#F5F3EF; }
+.option-btn.correct { border-color:var(--bamboo);background:#F0F8F4;color:var(--bamboo); }
+.option-btn.wrong { border-color:var(--cinnabar);background:#FEF5F3;color:var(--cinnabar); }
+
+/* Character buttons for fill-blank */
+.char-btn { display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--radius-sm);font-size:17px;font-weight:500;background:#fff;border:1.5px solid var(--border-dark);cursor:pointer;margin:4px;-webkit-transition:all .15s;transition:all .15s; }
+.char-btn:active { background:var(--ink);color:#fff;border-color:var(--ink); }
+.char-btn.selected { background:var(--ink);color:#fff;border-color:var(--ink); }
+.char-btn.used { opacity:.3;pointer-events:none; }
+
+/* List items */
+.list-group { background:#fff;border-radius:var(--radius-lg);overflow:hidden;margin:0 16px 16px; border:.5px solid var(--border); }
+.list-item { display:flex;align-items:center;padding:16px;gap:12px; cursor:pointer;-webkit-transition:background .15s;transition:background .15s; border-bottom:.5px solid var(--border); }
+.list-item:last-child { border-bottom:none; }
+.list-item:active { background:var(--paper-2); }
+.list-icon { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.list-body { flex:1;min-width:0; }
+.list-title { font-size:15px;font-weight:500;color:var(--text-primary); }
+.list-subtitle { font-size:13px;color:var(--text-secondary);margin-top:2px; }
+.list-arrow { width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0; }
+
+/* Section Header */
+.section-header { padding:20px 16px 10px; }
+.section-title { font-size:14px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px; }
+
+/* Avatar */
+.avatar { width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--ink),var(--ink-light));display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:600;flex-shrink:0; }
+
+/* Stats Grid */
+.stats-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px;margin-bottom:16px; }
+.stat-item { text-align:center; padding:12px 4px; }
+.stat-value { font-size:22px;font-weight:700;color:var(--ink); }
+.stat-label { font-size:11px;color:var(--text-muted);margin-top:2px; }
+
+/* Bottom fixed action */
+.bottom-action { position:sticky;bottom:0;padding:16px;background:linear-gradient(to top, var(--bg-app) 80%, transparent);z-index:50; }
+
+/* Floating Button */
+.fab { position:absolute;bottom:calc(var(--tabbar-h) + 16px);right:16px;width:56px;height:56px;border-radius:50%;background:var(--cinnabar);color:#fff;border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(196,54,54,.35);cursor:pointer;z-index:100; }
+
+/* Divider */
+.divider { height:.5px;background:var(--border);margin:0 16px; }
+
+/* Badge */
+.badge { position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--cinnabar);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 5px; }
+
+/* Skeleton loading */
+.skeleton { background:linear-gradient(90deg,var(--paper-2) 25%,var(--border) 50%,var(--paper-2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Loading spinner */
+.spinner { width:24px;height:24px;border:2.5px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Toast */
+.toast { position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(28,28,30,.88);color:#fff;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .3s;pointer-events:none; }
+.toast.show { opacity:1; }
+
+/* Page-specific styles below */
+
+/* === LAUNCH SCREEN === */
+.launch-screen { background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px; }
+.launch-logo { display:flex;flex-direction:column;align-items:center;gap:12px; }
+.launch-logo-icon { width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#C44536,#E07B55);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;letter-spacing:-1px;box-shadow:0 8px 32px rgba(196,54,54,.3); }
+.launch-logo-text { font-size:28px;font-weight:700;color:#fff;letter-spacing:4px; }
+.launch-logo-sub { font-size:13px;color:rgba(255,255,255,.5);letter-spacing:2px;margin-top:-8px; }
+.launch-slogan { font-size:15px;color:rgba(255,255,255,.65);letter-spacing:3px;font-weight:400; }
+.launch-loader { margin-top:20px; }
+
+/* === LOGIN PAGE === */
+.login-page { background:var(--paper); }
+.login-brand { padding:60px 32px 40px;display:flex;flex-direction:column;align-items:center;gap:16px; }
+.login-logo-wrap { display:flex;flex-direction:column;align-items:center;gap:8px; }
+.login-logo-icon { width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#C44536,#E07B55);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;box-shadow:0 6px 24px rgba(196,54,54,.25); }
+.login-logo-text { font-size:24px;font-weight:700;color:var(--ink);letter-spacing:3px; }
+.login-slogan { font-size:14px;color:var(--text-muted);letter-spacing:2px; }
+.login-actions { padding:20px 32px;display:flex;flex-direction:column;gap:14px; }
+.login-btn-apple { display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;background:#000;border-radius:var(--radius-lg);color:#fff;font-size:16px;font-weight:600;border:none;cursor:pointer; }
+.login-btn-apple:active { opacity:.85; }
+.login-btn-wechat { display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;background:#07C160;border-radius:var(--radius-lg);color:#fff;font-size:16px;font-weight:600;border:none;cursor:pointer; }
+.login-btn-wechat:active { opacity:.85; }
+.login-agree { text-align:center;padding:20px 32px 32px;font-size:12px;color:var(--text-muted);line-height:1.6; }
+.login-agree a { color:var(--ink);text-decoration:none;font-weight:500; }
+
+/* === HOME PAGE === */
+.home-page { background:var(--bg-app); }
+.home-header { padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between; }
+.home-avatar { width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--ink),#3a4a6a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600;cursor:pointer; }
+.home-title { font-size:20px;font-weight:700;color:var(--ink);letter-spacing:1px; }
+.home-checkin { width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer; }
+.hero-card { margin:16px;padding:24px;border-radius:var(--radius-xl);background:linear-gradient(135deg,#1B2A4A,#2D3E5F);color:#fff;position:relative;overflow:hidden; }
+.hero-card::before { content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:rgba(196,54,54,.15); }
+.hero-card::after { content:'';position:absolute;bottom:-40px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(184,134,11,.1); }
+.hero-card-inner { position:relative;z-index:1; }
+.hero-badge { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;background:rgba(255,255,255,.14);font-size:11px;font-weight:600;margin-bottom:14px;backdrop-filter:blur(4px); }
+.hero-title { font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:2px; }
+.hero-desc { font-size:14px;color:rgba(255,255,255,.6);margin-bottom:20px; }
+.hero-btn { display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);padding:12px 28px;border-radius:14px;color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;backdrop-filter:blur(4px);-webkit-transition:background .2s;transition:background .2s; }
+.hero-btn:active { background:rgba(255,255,255,.25); }
+.feature-cards { padding:0 16px;display:flex;flex-direction:column;gap:12px; }
+.feat-row { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.feat-card { background:#fff;border-radius:var(--radius-md);padding:16px;border:.5px solid var(--border);cursor:pointer;position:relative;-webkit-transition:all .2s;transition:all .2s; }
+.feat-card:active { transform:scale(.98); }
+.feat-icon { width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px; }
+.feat-title { font-size:15px;font-weight:600;color:var(--text-primary); }
+.feat-desc { font-size:12px;color:var(--text-muted);margin-top:4px; }
+.feat-card-wide { grid-column:span 2; display:flex;align-items:center;gap:16px; }
+.feat-card-wide .feat-icon { margin-bottom:0; }
+
+/* === CHAPTER LIST PAGE === */
+.chapter-list { background:var(--bg-app); }
+.chp-header { padding:12px 16px 8px; }
+.chp-title { font-size:22px;font-weight:700;color:var(--ink); }
+.chp-subtitle { font-size:13px;color:var(--text-muted);margin-top:2px; }
+.chp-card { background:#fff;border-radius:var(--radius-md);padding:16px;margin:0 16px 12px;border:.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;position:relative; }
+.chp-card:active { background:var(--paper-2); }
+.chp-card.locked { opacity:.6; }
+.chp-rank { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0; }
+.chp-info { flex:1;min-width:0; }
+.chp-name { font-size:16px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.chp-meta { display:flex;align-items:center;gap:8px;margin-top:4px; }
+.chp-unit { font-size:12px;color:var(--text-secondary); }
+.chp-right { display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0; }
+.chp-stars { font-size:13px; }
+.chp-progress { font-size:11px;color:var(--text-muted); }
+.chp-action { padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;white-space:nowrap; }
+.chp-action-primary { background:var(--ink);color:#fff; }
+.chp-action-lock { background:var(--paper-2);color:var(--text-muted); }
+
+/* === QUIZ PAGE === */
+.quiz-page { background:var(--bg-app); }
+.quiz-progress-bar { display:flex;align-items:center;gap:10px;padding:12px 16px 8px; }
+.quiz-progress-num { font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap; }
+.quiz-progress-track { flex:1;height:4px;background:var(--border-dark);border-radius:2px;overflow:hidden; }
+.quiz-progress-fill { height:100%;background:var(--ink);border-radius:2px;-webkit-transition:width .3s;transition:width .3s; }
+.quiz-difficulty { font-size:12px;font-weight:600;padding:3px 8px;border-radius:10px; }
+.diff-easy { background:#EDF5EE;color:var(--bamboo); }
+.diff-medium { background:#FEF5E7;color:var(--gold); }
+.diff-hard { background:#FDF0EE;color:var(--cinnabar); }
+.quiz-timer { font-size:13px;font-weight:500;color:var(--text-muted);display:flex;align-items:center;gap:4px; }
+.quiz-type-tag { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;margin-bottom:12px; }
+.type-fill { background:#EBF0FA;color:#3B5998; }
+.type-word { background:#F5EDF0;color:#8B4B6B; }
+.type-mood { background:#EDF5EE;color:var(--bamboo); }
+.type-exam { background:#FEF5E7;color:var(--gold); }
+.quiz-question { padding:0 16px; }
+.quiz-q-text { font-size:19px;font-weight:600;color:var(--text-primary);line-height:1.6;margin-bottom:20px;letter-spacing:.5px; }
+.quiz-blank { display:inline-block;min-width:48px;height:36px;border-bottom:3px solid var(--ink);margin:0 4px;text-align:center;font-size:20px;font-weight:600;color:var(--cinnabar);vertical-align:middle;line-height:36px; }
+.quiz-blank-filled { color:var(--ink);border-color:var(--bamboo); }
+.quiz-options { padding:0 16px; }
+.quiz-char-pool { display:flex;flex-wrap:wrap;gap:8px;padding:16px;background:var(--paper-2);border-radius:var(--radius-md);margin-top:12px; }
+.quiz-submit-area { padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom)); }
+.quiz-explain { display:none;margin:16px;padding:16px;border-radius:var(--radius-md);background:#F8F6F2;border-left:4px solid var(--bamboo); }
+.quiz-explain.show { display:block;animation:slideDown .3s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.explain-title { font-size:14px;font-weight:600;color:var(--bamboo);margin-bottom:8px; }
+.explain-text { font-size:14px;color:var(--text-secondary);line-height:1.7; }
+
+/* === RESULT PAGE === */
+.result-page { background:var(--bg-app); }
+.result-hero { display:flex;flex-direction:column;align-items:center;padding:48px 32px 32px; }
+.result-icon { width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px; }
+.result-success .result-icon { background:linear-gradient(135deg,#2D6A4F,#3D8B6A); }
+.result-fail .result-icon { background:linear-gradient(135deg,#C44536,#D9594B); }
+.result-icon-text { font-size:40px;color:#fff;font-weight:700; }
+.result-status { font-size:26px;font-weight:700; }
+.result-success .result-status { color:var(--bamboo); }
+.result-fail .result-status { color:var(--cinnabar); }
+.result-stars { margin:8px 0; }
+.result-stats { display:flex;justify-content:center;gap:24px;margin:16px 0; }
+.result-stat { text-align:center; }
+.result-stat-val { font-size:24px;font-weight:700;color:var(--ink); }
+.result-stat-lbl { font-size:12px;color:var(--text-muted);margin-top:2px; }
+.result-detail { background:#fff;border-radius:var(--radius-lg);margin:0 16px 16px;overflow:hidden; border:.5px solid var(--border); }
+.result-row { display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:.5px solid var(--border); }
+.result-row:last-child { border-bottom:none; }
+.result-row-lbl { font-size:14px;color:var(--text-secondary); }
+.result-row-val { font-size:15px;font-weight:600;color:var(--text-primary); }
+.result-weak-tags { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
+.result-actions { padding:0 16px 24px;display:flex;flex-direction:column;gap:10px; }
+
+/* === WRONG BOOK PAGE === */
+.wrong-page { background:var(--bg-app); }
+.wrong-stats-strip { display:flex;gap:8px;padding:12px 16px; }
+.wrong-stat-pill { flex:1;display:flex;flex-direction:column;align-items:center;padding:10px;border-radius:var(--radius-md);background:#fff;border:.5px solid var(--border); }
+.wrong-stat-pill-val { font-size:20px;font-weight:700; }
+.wrong-stat-pill-lbl { font-size:11px;color:var(--text-muted);margin-top:2px; }
+.wrong-card { background:#fff;border-radius:var(--radius-md);margin:0 16px 12px;padding:16px;border:.5px solid var(--border); }
+.wrong-card-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.wrong-card-source { font-size:12px;font-weight:600;color:var(--ink); }
+.wrong-card-type { font-size:11px;padding:3px 8px;border-radius:6px; }
+.wrong-q { font-size:15px;color:var(--text-primary);line-height:1.6;margin-bottom:8px; }
+.wrong-answer { display:flex;align-items:center;gap:8px;font-size:14px; }
+.wrong-your { color:var(--cinnabar); }
+.wrong-correct { color:var(--bamboo); }
+.wrong-actions { display:flex;gap:8px;margin-top:12px; }
+
+/* === LIBRARY PAGE === */
+.library-page { background:var(--bg-app); }
+.lib-card { background:#fff;border-radius:var(--radius-md);margin:0 16px 12px;padding:16px;border:.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer; }
+.lib-card:active { background:var(--paper-2); }
+.lib-cover { width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--ink),var(--ink-light));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0; }
+.lib-info { flex:1;min-width:0; }
+.lib-name { font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.lib-author { font-size:13px;color:var(--text-secondary);margin-top:2px; }
+.lib-arrow { color:var(--text-muted);flex-shrink:0; }
+
+/* === POEM DETAIL PAGE === */
+.poem-page { background:var(--bg-app); }
+.poem-header-card { background:linear-gradient(135deg,var(--ink),var(--ink-light));padding:28px 24px 32px;margin:0 0 16px;border-radius:0 0 24px 24px;color:#fff; }
+.poem-title-big { font-size:26px;font-weight:700;letter-spacing:2px;margin-bottom:4px; }
+.poem-author { font-size:15px;color:rgba(255,255,255,.6); }
+.poem-section { background:#fff;margin:0 0 12px;padding:20px;border-radius:0;border-top:.5px solid var(--border);border-bottom:.5px solid var(--border); }
+.poem-section:last-child { border-bottom:none; }
+.section-label { font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:6px; }
+.section-label::before { content:'';width:3px;height:14px;border-radius:2px;background:var(--cinnabar); }
+.poem-text { font-size:17px;line-height:1.9;color:var(--text-primary);letter-spacing:1px; }
+.poem-note { font-size:14px;line-height:1.8;color:var(--text-secondary); }
+.poem-translate { font-size:15px;line-height:1.9;color:var(--text-secondary); }
+.poem-kpoint { font-size:14px;line-height:1.7;color:var(--text-secondary); }
+.poem-action-bar { position:sticky;bottom:0;padding:12px 16px;background:rgba(242,237,230,.95);backdrop-filter:blur(10px);display:flex;gap:10px; z-index:50;}
+
+/* === PROFILE PAGE === */
+.profile-page { background:var(--bg-app); }
+.profile-header { background:linear-gradient(135deg,var(--ink),var(--ink-light));padding:28px 24px 32px;border-radius:0 0 28px 28px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px; }
+.profile-avatar-large { width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.15);border:2.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700; }
+.profile-name { font-size:20px;font-weight:700; }
+.profile-vip-badge { display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;background:linear-gradient(135deg,#B8860B,#DAA520);font-size:12px;font-weight:600;color:#fff; }
+.profile-edit-btn { padding:6px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);font-size:13px;background:transparent;cursor:pointer; }
+.menu-section { margin:16px 16px 0;background:#fff;border-radius:var(--radius-lg);overflow:hidden;border:.5px solid var(--border); }
+.menu-section-title { padding:16px 16px 8px;font-size:13px;font-weight:600;color:var(--text-muted);letter-spacing:.5px; }
+.menu-item { display:flex;align-items:center;padding:14px 16px;gap:12px;cursor:pointer;border-bottom:.5px solid var(--border); }
+.menu-item:last-child { border-bottom:none; }
+.menu-item:active { background:var(--paper-2); }
+.menu-icon { width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+.menu-text { flex:1;font-size:15px;font-weight:500; }
+.menu-arrow { width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0; }
+.logout-btn { display:block;width:100%;padding:16px;background:transparent;border:none;color:var(--cinnabar);font-size:15px;font-weight:600;cursor:pointer; }
+
+/* === IAP PAGE === */
+.iap-page { background:var(--bg-app); }
+.iap-hero { background:linear-gradient(135deg,var(--ink),var(--ink-light));padding:36px 24px 40px;text-align:center;color:#fff;border-radius:0 0 28px 28px; }
+.iap-hero-icon { width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px; }
+.iap-hero-title { font-size:24px;font-weight:700;letter-spacing:1px; }
+.iap-hero-sub { font-size:14px;color:rgba(255,255,255,.55);margin-top:8px;line-height:1.6; }
+.iap-benefits { display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px; }
+.iap-benefit { display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;background:rgba(255,255,255,.1);font-size:12px;font-weight:500; }
+.iap-plans { padding:16px; }
+.plan-card { background:#fff;border-radius:var(--radius-lg);padding:20px;margin-bottom:12px;border:2px solid var(--border);position:relative;cursor:pointer;-webkit-transition:all .2s;transition:all .2s; }
+.plan-card.recommended { border-color:var(--gold);background:linear-gradient(to bottom,#FFFBF0,#fff); }
+.plan-card.selected { border-color:var(--ink); }
+.plan-recommended-badge { position:absolute;top:-1px;right:20px;padding:4px 14px;border-radius:0 0 10px 10px;background:var(--gold);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px; }
+.plan-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+.plan-name { font-size:18px;font-weight:700; }
+.plan-price { text-align:right; }
+.plan-price-val { font-size:28px;font-weight:800;color:var(--cinnabar); }
+.plan-price-unit { font-size:13px;color:var(--text-muted); }
+.plan-price-original { font-size:12px;color:var(--text-muted);text-decoration:line-through; }
+.plan-features { list-style:none; }
+.plan-features li { padding:6px 0;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:8px; }
+.plan-features li::before { content:'✓';color:var(--bamboo);font-weight:700;font-size:14px; }
+.iap-buy-area { padding:0 16px 24px; }
+.iap-disclaimer { text-align:center;font-size:11px;color:var(--text-muted);line-height:1.6;margin-top:12px; }
+.restore-btn { display:block;width:100%;padding:12px;background:transparent;border:none;color:var(--text-muted);font-size:13px;cursor:pointer; }
+
+/* === CHECKIN PAGE === */
+.checkin-page { background:var(--bg-app); }
+.checkin-calendar { background:#fff;margin:12px 16px;border-radius:var(--radius-lg);padding:20px;border:.5px solid var(--border); }
+.cal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+.cal-month { font-size:18px;font-weight:700; }
+.cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:4px; }
+.cal-day-name { text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);padding:6px 0; }
+.cal-day { aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:14px;font-weight:500;cursor:pointer; }
+.cal-day.today { background:var(--ink);color:#fff;font-weight:700; }
+.cal-day.checked { background:var(--bamboo);color:#fff; }
+.cal-day.empty { visibility:hidden; }
+.checkin-streak { display:flex;align-items:center;justify-content:center;gap:16px;padding:24px; }
+.streak-number { font-size:56px;font-weight:800;color:var(--gold);line-height:1; }
+.streak-label { font-size:14px;color:var(--text-muted);text-align:center; }
+
+/* Page navigator sidebar */
+.page-nav { position:fixed;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);padding:8px;border-radius:12px 0 0 12px;box-shadow:-2px 0 12px rgba(0,0,0,.06);z-index:900; }
+.pnav-btn { width:36px;height:36px;border-radius:8px;border:none;background:transparent;font-size:10px;font-weight:600;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-transition:all .15s;transition:all .15s; writing-mode:vertical-rl;text-orientation:mixed; }
+.pnav-btn:hover, .pnav-btn.active { background:var(--ink);color:#fff; }
+
+</style>
+</head>
+<body>
+
+<!-- Phone Frame -->
+<div class="phone-frame" id="phoneFrame">
+<div class="dynamic-island"></div>
+
+<!-- ============ PAGE 1: Launch Screen ============ -->
+<div class="page launch-screen active" id="page-launch">
+  <div class="launch-logo">
+    <div class="launch-logo-icon">PQ</div>
+    <div class="launch-logo-text">诗途闯关</div>
+    <div class="launch-logo-sub">Poetry Quest</div>
+  </div>
+  <div class="launch-slogan">以闯关学诗，以风雅提分</div>
+  <div class="spinner launch-loader"></div>
+</div>
+
+<!-- ============ PAGE 2: Login ============ -->
+<div class="page login-page" id="page-login">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="login-brand">
+    <div class="login-logo-wrap">
+      <div class="login-logo-icon">PQ</div>
+      <div class="login-logo-text">诗途闯关</div>
+      <div class="login-slogan">以闯关学诗，以风雅提分</div>
+    </div>
+  </div>
+  <div class="login-actions">
+    <button class="login-btn-apple" onclick="navigateTo('page-home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+      Apple 一键登录
+    </button>
+    <button class="login-btn-wechat" onclick="navigateTo('page-home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8.69 2C4.33 2 .75 5.15.75 9c0 2.19 1.17 4.14 2.98 5.31L3 17l3.03-1.52A8.4 8.4 0 008.69 16c.3 0 .6-.02.89-.05C8.58 14.86 8 13.5 8 12c0-3.87 3.58-7 8-7 .43 0 .85.04 1.26.1C16.47 2.96 12.91 2 8.69 2zM6 6a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zM16 7c-3.87 0-7 2.69-7 6s3.13 6 7 6c.76 0 1.49-.1 2.17-.29L21 20l-.58-2.41A5.9 5.9 0 0023 13c0-3.31-3.13-6-7-6zm-2.5 3a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2z"/></svg>
+      微信授权登录
+    </button>
+  </div>
+  <div class="login-agree">
+    登录即代表您已阅读并同意<br><a href="#">《用户协议》</a> 和 <a href="#">《隐私政策》</a>
+  </div>
+</div>
+
+<!-- ============ PAGE 3: Home / Main Tab ============ -->
+<div class="page home-page" id="page-home">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="home-header">
+    <div class="home-avatar" onclick="navigateTo('page-profile')">李</div>
+    <div class="home-title">诗途闯关</div>
+    <div class="home-checkin" onclick="navigateTo('page-checkin')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C564D" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    </div>
+  </div>
+  
+  <div class="content">
+    <!-- Hero Card -->
+    <div class="hero-card" onclick="navigateTo('page-chapters')">
+      <div class="hero-card-inner">
+        <div class="hero-badge">今日推荐</div>
+        <div class="hero-title">开始闯关</div>
+        <div class="hero-desc">静夜思 · 李白 — 超高频考点篇目</div>
+        <button class="hero-btn">
+          立即进入 →
+        </button>
+      </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="section-header"><div style="font-size:14px;font-weight:700;color:var(--text-secondary)">学习工具</div></div>
+    <div class="feature-cards">
+      <div class="feat-row">
+        <div class="feat-card" onclick="navigateTo('page-library')">
+          <div class="feat-icon" style="background:#EBF0FA;">📖</div>
+          <div class="feat-title">学习资料库</div>
+          <div class="feat-desc">全册诗文详解</div>
+        </div>
+        <div class="feat-card" onclick="navigateTo('page-wrongbook')">
+          <div class="feat-icon" style="background:#FDF0EE;">📝</div>
+          <div class="feat-title">我的错题本</div>
+          <div class="feat-desc">23 道待巩固</div>
+        </div>
+      </div>
+      <div class="feat-card feat-card-wide" onclick="navigateTo('page-checkin')">
+        <div class="feat-icon" style="background:#FEF5E7;">🔥</div>
+        <div>
+          <div class="feat-title">每日打卡</div>
+          <div class="feat-desc">连续打卡 7 天，再接再厉！</div>
+        </div>
+        <svg width="20" height="20" fill="none" stroke="#B8860B" stroke-width="2" style="flex-shrink:0;"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+      
+      <!-- Quick Stats -->
+      <div class="stats-grid" style="margin-top:8px;">
+        <div class="stat-item">
+          <div class="stat-value" style="color:var(--ink);">12</div>
+          <div class="stat-label">累计闯关</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:var(--bamboo);">186</div>
+          <div class="stat-label">做题量</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:var(--gold);">7天</div>
+          <div class="stat-label">连续打卡</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:var(--cinnabar);">82%</div>
+          <div class="stat-label">正确率</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="height:16px;"></div>
+  </div>
+  
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab(this,'page-home')">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">首页</span>
+    </div>
+    <div class="tab-item" onclick="switchTab(this,'page-chapters')">
+      <svg class="tab-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span class="tab-label">闯关</span>
+    </div>
+    <div class="tab-item" onclick="switchTab(this,'page-profile')">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="tab-label">我的</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 4: Chapter List ============ -->
+<div class="page chapter-list" id="page-chapters">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar">
+    <div class="nav-left" onclick="navigateTo('page-home')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">篇目关卡</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <!-- Segmented Control -->
+  <div class="segmented">
+    <div class="seg-item active" onclick="selectSeg(this)">全部</div>
+    <div class="seg-item" onclick="selectSeg(this)">必修上</div>
+    <div class="seg-item" onclick="selectSeg(this)">必修下</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必上</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必中</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必下</div>
+  </div>
+  
+  <div class="content" id="chapterListContent">
+    <!-- Chapter Card 1 -->
+    <div class="chp-card" onclick="navigateTo('page-quiz')">
+      <div class="chp-rank" style="background:var(--cinnabar);">1</div>
+      <div class="chp-info">
+        <div class="chp-name">静夜思 · 李白</div>
+        <div class="chp-meta">
+          <span class="chp-unit">必修上册 · 第一单元</span>
+          <span class="tag tag-hot">超高频</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars">&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="chp-progress">18/20 题</div>
+        <button class="chp-action chp-action-primary" onclick="event.stopPropagation(); navigateTo('page-quiz')">继续</button>
+      </div>
+    </div>
+    
+    <!-- Chapter Card 2 -->
+    <div class="chp-card" onclick="navigateTo('page-quiz')">
+      <div class="chp-rank" style="background:var(--gold);">2</div>
+      <div class="chp-info">
+        <div class="chp-name">登高 · 杜甫</div>
+        <div class="chp-meta">
+          <span class="chp-unit">必修上册 · 第三单元</span>
+          <span class="tag tag-hot">超高频</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars">&#9733;&#9733;&#9733;</div>
+        <div class="chp-progress">12/20 题</div>
+        <button class="chp-action chp-action-primary" onclick="event.stopPropagation(); navigateTo('page-quiz')">继续</button>
+      </div>
+    </div>
+    
+    <!-- Chapter Card 3 -->
+    <div class="chp-card" onclick="navigateTo('page-quiz')">
+      <div class="chp-rank" style="background:var(--bamboo);">3</div>
+      <div class="chp-info">
+        <div class="chp-name">琵琶行（节选）· 白居易</div>
+        <div class="chp-meta">
+          <span class="chp-unit">必修下册 · 第二单元</span>
+          <span class="tag tag-high">高频</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars">&#9733;&#9733;</div>
+        <div class="chp-progress">5/20 题</div>
+        <button class="chp-action chp-action-primary" onclick="event.stopPropagation(); navigateTo('page-quiz')">继续</button>
+      </div>
+    </div>
+    
+    <!-- Chapter Card 4 -->
+    <div class="chp-card" onclick="navigateTo('page-quiz')">
+      <div class="chp-rank" style="background:var(--ink-light);">4</div>
+      <div class="chp-info">
+        <div class="chp-name">念奴娇·赤壁怀古 · 苏轼</div>
+        <div class="chp-meta">
+          <span class="chp-unit">必修下册 · 第四单元</span>
+          <span class="tag tag-high">高频</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars-dim">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="chp-progress">未开始</div>
+        <button class="chp-action chp-action-primary" onclick="event.stopPropagation(); navigateTo('page-quiz')">开始</button>
+      </div>
+    </div>
+    
+    <!-- Chapter Card 5 - Locked -->
+    <div class="chp-card locked" onclick="showToast('完成前一单元解锁')">
+      <div class="chp-rank" style="background:var(--text-muted);">5</div>
+      <div class="chp-info">
+        <div class="chp-name">永遇乐·京口北固亭怀古 · 辛弃疾</div>
+        <div class="chp-meta">
+          <span class="chp-unit">选必上册 · 第一单元</span>
+          <span class="tag tag-locked">已锁定</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars-dim">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="chp-progress">需解锁</div>
+        <button class="chp-action chp-action-lock" onclick="event.stopPropagation(); navigateTo('page-iap')">🔒 解锁</button>
+      </div>
+    </div>
+    
+    <!-- Chapter Card 6 - Locked -->
+    <div class="chp-card locked" onclick="showToast('完成前一单元解锁')">
+      <div class="chp-rank" style="background:var(--text-muted);">6</div>
+      <div class="chp-info">
+        <div class="chp-name">蜀道难 · 李白</div>
+        <div class="chp-meta">
+          <span class="chp-unit">选必中册 · 第二单元</span>
+          <span class="tag tag-locked">已锁定</span>
+        </div>
+      </div>
+      <div class="chp-right">
+        <div class="chp-stars stars-dim">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="chp-progress">需解锁</div>
+        <button class="chp-action chp-action-lock" onclick="event.stopPropagation(); navigateTo('page-iap')">🔒 解锁</button>
+      </div>
+    </div>
+    
+    <div style="height:80px;"></div>
+  </div>
+  
+  <!-- FAB -->
+  <button class="fab" onclick="navigateTo('page-iap')" title="一键解锁全册">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4m-5-4l-4-4 4-4m-4 4h12"/></svg>
+  </button>
+</div>
+
+<!-- ============ PAGE 5: Quiz / Answer Page ============ -->
+<div class="page quiz-page" id="page-quiz">
+  <div class="status-bar" style="color:var(--text-primary);"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar white">
+    <div class="nav-left" onclick="navigateTo('page-chapters')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">静夜思 · 闯关中</div>
+    <div class="nav-right">
+      <div class="quiz-timer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        01:24
+      </div>
+    </div>
+  </div>
+  
+  <!-- Progress bar -->
+  <div class="quiz-progress-bar">
+    <span class="quiz-progress-num">3 / 20</span>
+    <div class="quiz-progress-track">
+      <div class="quiz-progress-fill" style="width:15%"></div>
+    </div>
+    <span class="quiz-difficulty diff-medium">中等</span>
+  </div>
+  
+  <div class="content" id="quizContent">
+    <!-- Question type tag -->
+    <div style="padding:0 16px;">
+      <span class="quiz-type-tag type-fill">诗词填字闯关</span>
+    </div>
+    
+    <!-- Question text -->
+    <div class="quiz-question">
+      <div class="quiz-q-text">
+        床前明月<span class="quiz-blank quiz-blank-filled">光</span>，<br>
+        疑是地上<span class="quiz-blank">___</span>。
+      </div>
+    </div>
+    
+    <!-- Character pool for fill-blank -->
+    <div class="quiz-options">
+      <div class="quiz-char-pool">
+        <button class="char-btn">霜</button>
+        <button class="char-btn used">光</button>
+        <button class="char-btn">雪</button>
+        <button class="char-btn">露</button>
+        <button class="char-btn">冰</button>
+        <button class="char-btn">雾</button>
+        <button class="char-btn">银</button>
+        <button class="char-btn">华</button>
+      </div>
+    </div>
+    
+    <!-- Explanation area (hidden by default) -->
+    <div class="quiz-explain" id="quizExplain">
+      <div class="explain-title">✓ 正确答案解析</div>
+      <div class="explain-text">
+        <strong>正确答案：霜</strong><br><br>
+        本句运用<strong>比喻</strong>修辞手法，将月光比作地上的霜。表现了诗人客居他乡时的孤独与思乡之情。<br><br>
+        <strong>【易错点】</strong>"霜"字常被误写为"雪"、"光"等字，需注意诗句原貌。<br>
+        <strong>【高考考点】</strong>名句默写、比喻手法辨析、情感主旨分析
+      </div>
+    </div>
+  </div>
+  
+  <!-- Submit button area -->
+  <div class="quiz-submit-area bottom-action">
+    <button class="btn btn-primary btn-block" id="submitBtn" onclick="submitAnswer()">提交答案</button>
+  </div>
+</div>
+
+<!-- ============ PAGE 6: Result Page ============ -->
+<div class="page result-page result-success" id="page-result">
+  <div class="status-bar" style="color:var(--text-primary);"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar">
+    <div class="nav-left" onclick="navigateTo('page-chapters')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">闯关结果</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <div class="content">
+    <!-- Result Hero -->
+    <div class="result-hero">
+      <div class="result-icon">
+        <div class="result-icon-text">✓</div>
+      </div>
+      <div class="result-status">闯关成功！</div>
+      <div class="result-stars stars">&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <div class="result-stat-val">90%</div>
+          <div class="result-stat-lbl">正确率</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val">4'32"</div>
+          <div class="result-stat-lbl">用时</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val">18/20</div>
+          <div class="result-stat-lbl">答对</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Achievement badge -->
+    <div style="padding:0 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:12px;background:linear-gradient(135deg,#FFF8E8,#FFEFCD);">
+        <span>🏆</span><span style="font-size:14px;font-weight:600;color:var(--gold);">首次四星通关 · 获得「静夜思达人」徽章</span>
+      </div>
+    </div>
+    
+    <!-- Detail stats -->
+    <div class="result-detail">
+      <div class="result-row">
+        <span class="result-row-lbl">答对题数</span>
+        <span class="result-row-val" style="color:var(--bamboo);">18 道</span>
+      </div>
+      <div class="result-row">
+        <span class="result-row-lbl">答错题数</span>
+        <span class="result-row-val" style="color:var(--cinnabar);">2 道</span>
+      </div>
+      <div class="result-row">
+        <span class="result-row-lbl">薄弱知识点</span>
+        <div class="result-weak-tags">
+          <span class="tag tag-hot" style="font-size:11px;">名句默写易错字</span>
+          <span class="tag tag-high" style="font-size:11px;">比喻手法辨析</span>
+        </div>
+      </div>
+      <div class="result-row" style="cursor:pointer;" onclick="navigateTo('page-wrongbook')">
+        <span class="result-row-lbl">查看错题详情</span>
+        <svg width="16" height="16" fill="none" stroke="#9E9789" stroke-width="2"><path d="M6 12l4 4 8-8"/></svg>
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="result-actions">
+      <button class="btn btn-secondary btn-block" onclick="navigateTo('page-quiz')">再闯一次</button>
+      <button class="btn btn-primary btn-block" onclick="navigateTo('page-chapters')">下一篇目</button>
+      <button class="btn btn-gold btn-block" onclick="navigateTo('page-iap')">解锁全册题库 ¥19.9</button>
+    </div>
+    
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 7: Wrong Book ============ -->
+<div class="page wrong-page" id="page-wrongbook">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar white">
+    <div class="nav-left" onclick="navigateTo('page-home')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">错题本</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <!-- Segmented filter -->
+  <div class="segmented" style="margin-bottom:8px;">
+    <div class="seg-item active" onclick="selectSeg(this)">全部</div>
+    <div class="seg-item" onclick="selectSeg(this)">按篇目</div>
+    <div class="seg-item" onclick="selectSeg(this)">按题型</div>
+    <div class="seg-item" onclick="selectSeg(this)">按错因</div>
+  </div>
+  
+  <!-- Stats strip -->
+  <div class="wrong-stats-strip">
+    <div class="wrong-stat-pill">
+      <div class="wrong-stat-pill-val" style="color:var(--cinnabar);">23</div>
+      <div class="wrong-stat-pill-lbl">总错题</div>
+    </div>
+    <div class="wrong-stat-pill">
+      <div class="wrong-stat-pill-val" style="color:var(--bamboo);">8</div>
+      <div class="wrong-stat-pill-lbl">已掌握</div>
+    </div>
+    <div class="wrong-stat-pill">
+      <div class="wrong-stat-pill-val" style="color:var(--gold);">15</div>
+      <div class="wrong-stat-pill-lbl">待巩固</div>
+    </div>
+  </div>
+  
+  <div class="content">
+    <!-- Wrong card 1 -->
+    <div class="wrong-card">
+      <div class="wrong-card-head">
+        <div>
+          <span class="wrong-card-source">静夜思 · 第3题</span>
+        </div>
+        <span class="wrong-card-type" style="background:#EBF0FA;color:#3B5998;">填字</span>
+      </div>
+      <div class="wrong-q">床前明月<span style="border-bottom:2px solid var(--cinnabar);color:var(--cinnabar);font-weight:600;padding:0 4px;">___</span>，疑是地上霜。</div>
+      <div class="wrong-answer">
+        <span class="wrong-your">你的答案：<strong>雪</strong></span>
+        <span style="color:var(--text-muted);">|</span>
+        <span class="wrong-correct">正确答案：<strong>光</strong></span>
+      </div>
+      <div class="wrong-actions">
+        <button class="btn btn-small btn-secondary" onclick="document.getElementById('quizExplainDemo').classList.toggle('show');this.textContent=this.textContent==='查看解析'?'收起解析':'查看解析'">查看解析</button>
+        <button class="btn btn-small btn-primary" onclick="navigateTo('page-quiz')">再答一次</button>
+      </div>
+      <div class="quiz-explain show" id="quizExplainDemo" style="margin-top:12px;">
+        <div class="explain-title">解析</div>
+        <div class="explain-text">正确答案为"光"，原句为"床前明月光"。此处用比喻将月光比作霜，营造清冷孤寂的氛围。注意区分字形相似的"光"与"雪"等字。</div>
+      </div>
+    </div>
+    
+    <!-- Wrong card 2 -->
+    <div class="wrong-card">
+      <div class="wrong-card-head">
+        <div>
+          <span class="wrong-card-source">登高 · 第7题</span>
+        </div>
+        <span class="wrong-card-type" style="background:#F5EDF0;color:#8B4B6B;">字词</span>
+      </div>
+      <div class="wrong-q">"无边落木萧萧下"中的"萧萧"的正确释义是？</div>
+      <div class="wrong-answer">
+        <span class="wrong-your">你的选择：<strong>B. 寂寞冷清的样子</strong></span>
+        <span style="color:var(--text-muted);">|</span>
+        <span class="wrong-correct">正确答案：<strong>A. 形容风吹树叶的声音</strong></span>
+      </div>
+      <div class="wrong-actions">
+        <button class="btn btn-small btn-secondary">查看解析</button>
+        <button class="btn btn-small btn-primary" onclick="navigateTo('page-quiz')">再答一次</button>
+      </div>
+    </div>
+    
+    <!-- Wrong card 3 -->
+    <div class="wrong-card">
+      <div class="wrong-card-head">
+        <div>
+          <span class="wrong-card-source">念奴娇·赤壁怀古 · 第12题</span>
+        </div>
+        <span class="wrong-card-type" style="background:#FEF5E7;color:#B8860B;">意境</span>
+      </div>
+      <div class="wrong-q">本词主要表达了词人怎样的思想感情？</div>
+      <div class="wrong-answer">
+        <span class="wrong-your">你的选择：<strong>C. 壮志未酬的感慨</strong></span>
+        <span style="color:var(--text-muted);">|</span>
+        <span class="wrong-correct">正确答案：<strong>D. 壮志未酬 + 怀古伤今（复合）</strong></span>
+      </div>
+      <div class="wrong-actions">
+        <button class="btn btn-small btn-secondary">查看解析</button>
+        <button class="btn btn-small btn-primary" onclick="navigateTo('page-quiz')">再答一次</button>
+      </div>
+    </div>
+    
+    <div style="height:80px;"></div>
+  </div>
+  
+  <!-- Bottom actions -->
+  <div class="bottom-action" style="display:flex;gap:10px;">
+    <button class="btn btn-secondary" style="flex:1;" onclick="showToast('已导出至文件')">一键导出</button>
+    <button class="btn btn-cinnubar" style="flex:1;" onclick="showToast('已清空')">清空错题本</button>
+  </div>
+</div>
+
+<!-- ============ PAGE 8: Learning Library ============ -->
+<div class="page library-page" id="page-library">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar white">
+    <div class="nav-left" onclick="navigateTo('page-home')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">学习资料库</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <div class="segmented">
+    <div class="seg-item active" onclick="selectSeg(this)">全部</div>
+    <div class="seg-item" onclick="selectSeg(this)">必修上</div>
+    <div class="seg-item" onclick="selectSeg(this)">必修下</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必上</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必中</div>
+    <div class="seg-item" onclick="selectSeg(this)">选必下</div>
+  </div>
+  
+  <div class="content">
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">静</div>
+      <div class="lib-info">
+        <div class="lib-name">静夜思</div>
+        <div class="lib-author">李白 · 必修上册 · 五言绝句</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">登</div>
+      <div class="lib-info">
+        <div class="lib-name">登高</div>
+        <div class="lib-author">杜甫 · 必修上册 · 七言律诗</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">琵</div>
+      <div class="lib-info">
+        <div class="lib-name">琵琶行（节选）</div>
+        <div class="lib-author">白居易 · 必修下册 · 七言歌行</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">念</div>
+      <div class="lib-info">
+        <div class="lib-name">念奴娇·赤壁怀古</div>
+        <div class="lib-author">苏轼 · 必修下册 · 词</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">永</div>
+      <div class="lib-info">
+        <div class="lib-name">永遇乐·京口北固亭怀古</div>
+        <div class="lib-author">辛弃疾 · 选必上册 · 词</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div class="lib-card" onclick="navigateTo('page-poem')">
+      <div class="lib-cover">蜀</div>
+      <div class="lib-info">
+        <div class="lib-name">蜀道难</div>
+        <div class="lib-author">李白 · 选必中册 · 古体诗</div>
+      </div>
+      <svg class="lib-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 8b: Poem Detail ============ -->
+<div class="page poem-page" id="page-poem">
+  <div class="poem-header-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5" stroke-linecap="round" style="cursor:pointer;" onclick="navigateTo('page-library')"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+      </div>
+      <button style="padding:7px 16px;border-radius:14px;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;" onclick="navigateTo('page-quiz')">开始闯关 →</button>
+    </div>
+    <div class="poem-title-big">静夜思</div>
+    <div class="poem-author">李白 · 唐代 · 五言绝句</div>
+  </div>
+  
+  <div class="content" style="background:#fff;">
+    <div class="poem-section">
+      <div class="section-label">原文</div>
+      <div class="poem-text" style="text-align:center;">
+        床前明月<span style="border-bottom:2px solid var(--cinnabar);">光</span>，<br>
+        疑是地上<span style="border-bottom:2px solid var(--cinnabar);">霜</span>。<br>
+        举头望明<span style="border-bottom:2px solid var(--cinnabar);">月</span>，<br>
+        低首思故<span style="border-bottom:2px solid var(--cinnabar);">乡</span>。
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">课下注释</div>
+      <div class="poem-note">
+        ① 床：一说井栏，一说坐卧之具。<br>
+        ② 疑：好像，仿佛。<br>
+        ③ 举头：抬头。<br>
+        ④ 故乡：家乡，指诗人思念的故乡。
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">重点实词虚词</div>
+      <div class="poem-note">
+        <strong>光</strong>：名词作状语，明亮地<br>
+        <strong>疑</strong>：动词，怀疑、以为<br>
+        <strong>举</strong>：动词，抬起<br>
+        <strong>故乡</strong>：偏正结构，旧的家乡
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">逐句翻译</div>
+      <div class="poem-translate">
+        明亮的月光洒在床前，<br>
+        好像地上铺了一层白霜。<br>
+        抬起头来望着明月，<br>
+        低下头去思念故乡。
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">艺术手法拆解</div>
+      <div class="poem-kpoint">
+        <strong>比喻：</strong>"疑是地上霜"——将月光比作霜，生动形象。<br><br>
+        <strong>白描：</strong>语言朴素自然，不加修饰，直抒胸臆。<br><br>
+        <strong>情景交融：</strong>借月抒情，融情于景。
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">主旨情感</div>
+      <div class="poem-kpoint">
+        表达了诗人<strong>客居他乡、孤寂思乡</strong>的情感。通过描写秋日夜晚旅舍中的所见所感，抒发了对故乡亲人的深切怀念。全诗语言浅显却意味深长，是唐诗中最脍炙人口的佳作之一。
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">高考考点溯源</div>
+      <div class="poem-kpoint">
+        • 名句默写高频篇目（近10年考查 8 次）<br>
+        • 比喻手法辨析常考<br>
+        • 情感主旨概括必考题型<br>
+        • 易错字："床""霜""望""故乡"
+      </div>
+    </div>
+    
+    <div class="poem-section">
+      <div class="section-label">同源拓展</div>
+      <div class="poem-kpoint">
+        对比阅读：《九月九日忆山东兄弟》（王维）——同为表达思乡之作，但《静夜思》含蓄内敛，《忆》直抒胸臆。"独在异乡为异客"与"低头思故乡"有异曲同工之妙。
+      </div>
+    </div>
+    
+    <div style="height:80px;"></div>
+  </div>
+  
+  <div class="poem-action-bar">
+    <button class="btn btn-secondary" style="flex:1;" onclick="navigateTo('page-library')">返回资料库</button>
+    <button class="btn btn-primary" style="flex:1.2;" onclick="navigateTo('page-quiz')">开始闯关此篇</button>
+  </div>
+</div>
+
+<!-- ============ PAGE 9: Profile ============ -->
+<div class="page profile-page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-avatar-large">李</div>
+    <div class="profile-name">李同学</div>
+    <div class="profile-vip-badge">⭐ 免费版</div>
+    <button class="profile-edit-btn">编辑资料</button>
+  </div>
+  
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-value">12</div>
+      <div class="stat-label">累计闯关</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">186</div>
+      <div class="stat-label">做题量</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">7天</div>
+      <div class="stat-label">连续打卡</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">82%</div>
+      <div class="stat-label">正确率</div>
+    </div>
+  </div>
+  
+  <div class="content" style="background:var(--bg-app);padding-top:8px;">
+    <!-- Menu Group 1: My Learning -->
+    <div class="menu-section-title">我的学习</div>
+    <div class="menu-section">
+      <div class="menu-item" onclick="navigateTo('page-wrongbook')">
+        <div class="menu-icon" style="background:#FDF0EE;">📝</div>
+        <span class="menu-text">我的错题本</span>
+        <span style="font-size:13px;color:var(--cinnabar);font-weight:600;margin-right:4px;">23</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" onclick="navigateTo('page-library')">
+        <div class="menu-icon" style="background:#EBF0FA;">📖</div>
+        <span class="menu-text">学习资料库</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" onclick="navigateTo('page-checkin')">
+        <div class="menu-icon" style="background:#FEF5E7;">🔥</div>
+        <span class="menu-text">我的打卡</span>
+        <span style="font-size:13px;color:var(--gold);font-weight:600;margin-right:4px;">7天</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#EDF5EE;">🏆</div>
+        <span class="menu-text">我的成就</span>
+        <span style="font-size:13px;color:var(--text-muted);margin-right:4px;">3 枚</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    
+    <!-- Menu Group 2: VIP Services -->
+    <div class="menu-section-title">会员服务</div>
+    <div class="menu-section">
+      <div class="menu-item" onclick="navigateTo('page-iap')">
+        <div class="menu-icon" style="background:linear-gradient(135deg,#B8860B,#DAA520);color:#fff;">👑</div>
+        <span class="menu-text">解锁全册题库</span>
+        <span class="tag tag-vip" style="font-size:10px;padding:2px 8px;">限时优惠</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" onclick="navigateTo('page-iap')">
+        <div class="menu-icon" style="background:#FDF0EE;">🎯</div>
+        <span class="menu-text">月度打卡营</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#F0EDE8;">🧾</div>
+        <span class="menu-text">购买记录</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    
+    <!-- Menu Group 3: Help & Settings -->
+    <div class="menu-section-title">帮助与设置</div>
+    <div class="menu-section">
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#F0EDE8;">❓</div>
+        <span class="menu-text">常见问题</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#F0EDE8;">💬</div>
+        <span class="menu-text">意见反馈</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon" style="background:#F0EDE8;">🎧</div>
+        <span class="menu-text">联系客服</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    
+    <div class="menu-section" style="margin-bottom:16px;">
+      <div class="menu-item" style="border-bottom:none;">
+        <div class="menu-icon" style="background:#F0EDE8;">⚙️</div>
+        <span class="menu-text">账号设置</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" style="border-bottom:none;">
+        <div class="menu-icon" style="background:#F0EDE8;">🔒</div>
+        <span class="menu-text">隐私设置</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" style="border-bottom:none;">
+        <div class="menu-icon" style="background:#F0EDE8;">🔔</div>
+        <span class="menu-text">通知设置</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="menu-item" style="border-bottom:none;">
+        <div class="menu-icon" style="background:#F0EDE8;">ℹ️</div>
+        <span class="menu-text">关于我们</span>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <button class="logout-btn" onclick="navigateTo('page-login')">退出登录</button>
+    </div>
+    
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 10: IAP Purchase ============ -->
+<div class="page iap-page" id="page-iap">
+  <div class="status-bar" style="color:var(--text-primary);"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar white">
+    <div class="nav-left" onclick="navigateTo('page-profile')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">解锁题库</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <div class="content">
+    <!-- Hero section -->
+    <div class="iap-hero">
+      <div class="iap-hero-icon">👑</div>
+      <div class="iap-hero-title">诗途闯关 全册题库</div>
+      <div class="iap-hero-sub">解锁必修+选择性必修 全5册所有篇目闯关题库<br>配套完整学习资料 · 永久有效 · 免费更新</div>
+      <div class="iap-benefits">
+        <span class="iap-benefit">📚 全5册 68篇</span>
+        <span class="iap-benefit">🎯 1360+ 题目</span>
+        <span class="iap-benefit">♾️ 永久使用</span>
+        <span class="iap-benefit">🔄 免费更新</span>
+      </div>
+    </div>
+    
+    <!-- Plans -->
+    <div class="iap-plans">
+      <!-- Plan 1: Single volume -->
+      <div class="plan-card" onclick="selectPlan(this)">
+        <div class="plan-header">
+          <div class="plan-name">单册全套闯关题库</div>
+          <div class="plan-price">
+            <div class="plan-price-val">¥9.9</div>
+            <div class="plan-price-unit">永久解锁</div>
+          </div>
+        </div>
+        <ul class="plan-features">
+          <li>任选 1 册全部篇目</li>
+          <li>约 270+ 道闯关题目</li>
+          <li>配套学习资料</li>
+          <li>免费内容更新</li>
+        </ul>
+      </div>
+      
+      <!-- Plan 2: Full set - recommended -->
+      <div class="plan-card recommended selected" onclick="selectPlan(this)" id="planRecommended">
+        <div class="plan-recommended-badge">推荐</div>
+        <div class="plan-header">
+          <div class="plan-name">全5册全套题库</div>
+          <div class="plan-price">
+            <div class="plan-price-original">¥49.5</div>
+            <div class="plan-price-val" style="font-size:34px;">¥19.9</div>
+            <div class="plan-price-unit">立省 ¥29.6</div>
+          </div>
+        </div>
+        <ul class="plan-features">
+          <li>全5册 68 篇诗文全部解锁</li>
+          <li>1360+ 道原创闯关题目</li>
+          <li>全套学习资料库（原文/注释/翻译/赏析）</li>
+          <li>错题本 + 智能复习系统</li>
+          <li>每日打卡营 + 成就徽章系统</li>
+          <li>永久使用 · 免费更新 · 多设备同步</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Buy area -->
+    <div class="iap-buy-area">
+      <button class="btn btn-gold btn-block" style="height:54px;font-size:18px;" onclick="showToast('正在调用 Apple Pay...')">立即购买 ¥19.9</button>
+      <button class="restore-btn" onclick="showToast('已恢复购买记录')">恢复购买</button>
+      <div class="iap-disclaimer">
+        本服务通过 Apple 官方内购支付<br>
+        购买后永久有效，支持多设备同步
+      </div>
+    </div>
+    
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 11: Check-in ============ -->
+<div class="page checkin-page" id="page-checkin">
+  <div class="status-bar"><span class="status-time">9:41</span><div class="status-icons"><svg viewBox="0 0 17 17"><path d="M8.5 2a6 6 0 00-6 6v4.5l-1.5 1.5h15l-1.5-1.5V8a6 6 0 00-6-6zm1.5 14H7a1.5 1.5 0 001.5-1.5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div></div>
+  <div class="nav-bar white">
+    <div class="nav-left" onclick="navigateTo('page-home')">
+      <svg class="nav-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="nav-title">每日打卡</div>
+    <div class="nav-right"></div>
+  </div>
+  
+  <div class="content">
+    <!-- Streak counter -->
+    <div class="checkin-streak" style="background:linear-gradient(135deg,#FFFBF0,#fff);border-radius:var(--radius-lg);margin:12px 16px 0;padding:24px;border:.5px solid rgba(184,134,11,.2);">
+      <div>
+        <div class="streak-number">7</div>
+        <div class="streak-label">连续打卡天数</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:40px;">🔥</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">坚持就是胜利!</div>
+      </div>
+      <div>
+        <div style="font-size:28px;font-weight:700;color:var(--ink);">本周目标</div>
+        <div style="font-size:13px;color:var(--text-muted);">5 / 7 天</div>
+      </div>
+    </div>
+    
+    <!-- Calendar -->
+    <div class="checkin-calendar">
+      <div class="cal-header">
+        <span class="cal-month">2026年6月</span>
+        <span style="font-size:13px;color:var(--text-muted);">共打卡 18 天</span>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-day-name">日</div><div class="cal-day-name">一</div><div class="cal-day-name">二</div>
+        <div class="cal-day-name">三</div><div class="cal-day-name">四</div><div class="cal-day-name">五</div><div class="cal-day-name">六</div>
+        
+        <div class="cal-day empty"></div><div class="cal-day checked">1</div><div class="cal-day checked">2</div>
+        <div class="cal-day checked">3</div><div class="cal-day checked">4</div><div class="cal-day checked">5</div><div class="cal-day checked">6</div>
+        
+        <div class="cal-day checked">7</div><div class="cal-day today">8</div><div class="cal-day empty">9</div>
+        <div class="cal-day empty">10</div><div class="cal-day empty">11</div><div class="cal-day empty">12</div>
+        <div class="cal-day empty">13</div>
+        
+        <div class="cal-day empty">14</div><div class="cal-day empty">15</div><div class="cal-day empty">16</div>
+        <div class="cal-day empty">17</div><div class="cal-day empty">18</div><div class="cal-day empty">19</div>
+        <div class="cal-day empty">20</div>
+        
+        <div class="cal-day empty">21</div><div class="cal-day empty">22</div><div class="cal-day empty">23</div>
+        <div class="cal-day empty">24</div><div class="cal-day empty">25</div><div class="cal-day empty">26</div>
+        <div class="cal-day empty">27</div>
+        
+        <div class="cal-day empty">28</div><div class="cal-day empty">29</div><div class="cal-day empty">30</div>
+      </div>
+    </div>
+    
+    <!-- Check-in button -->
+    <div style="padding:16px;">
+      <button class="btn btn-primary btn-block" style="height:52px;font-size:17px;background:linear-gradient(135deg,#B8860B,#DAA520);" onclick="showToast('🎉 打卡成功！已连续打卡 8 天')">今日打卡 ✓</button>
+    </div>
+    
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+</div><!-- end phone-frame -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Page Navigator -->
+<div class="page-nav" id="pageNav" style="display:none;">
+  <button class="pnav-btn active" onclick="navigateTo('page-launch'); highlightNav(this)">启动</button>
+  <button class="pnav-btn" onclick="navigateTo('page-login'); highlightNav(this)">登录</button>
+  <button class="pnav-btn" onclick="navigateTo('page-home'); highlightNav(this)">首页</button>
+  <button class="pnav-btn" onclick="navigateTo('page-chapters'); highlightNav(this)">关卡</button>
+  <button class="pnav-btn" onclick="navigateTo('page-quiz'); highlightNav(this)">答题</button>
+  <button class="pnav-btn" onclick="navigateTo('page-result'); highlightNav(this)">结果</button>
+  <button class="pnav-btn" onclick="navigateTo('page-wrongbook'); highlightNav(this)">错题</button>
+  <button class="pnav-btn" onclick="navigateTo('page-library'); highlightNav(this)">资料</button>
+  <button class="pnav-btn" onclick="navigateTo('page-poem'); highlightNav(this)">诗文</button>
+  <button class="pnav-btn" onclick="navigateTo('page-profile'); highlightNav(this)">我的</button>
+  <button class="pnav-btn" onclick="navigateTo('page-iap'); highlightNav(this)">购买</button>
+  <button class="pnav-btn" onclick="navigateTo('page-checkin'); highlightNav(this)">打卡</button>
+</div>
+
+<script>
+// ===== Navigation =====
+let currentPageId = 'page-launch';
+
+function navigateTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  if (target) {
+    target.classList.add('active');
+    currentPageId = pageId;
+    // Update tab states when navigating to home/chapters/profile
+    updateTabState();
+  }
+}
+
+function switchTab(el, pageId) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  navigateTo(pageId);
+}
+
+function updateTabState() {
+  const tabs = document.querySelectorAll('.tab-item');
+  tabs.forEach(t => t.classList.remove('active'));
+  const homeTabs = document.querySelectorAll('#page-home .tab-item');
+  homeTabs.forEach((t, i) => {
+    t.classList.remove('active');
+    if ((i === 0 && currentPageId === 'page-home') ||
+        (i === 1 && currentPageId === 'page-chapters') ||
+        (i === 2 && currentPageId === 'page-profile')) {
+      t.classList.add('active');
+    }
+  });
+}
+
+// Segmented control
+function selectSeg(el) {
+  el.parentElement.querySelectorAll('.seg-item').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Quiz interaction
+let charSelected = false;
+document.querySelectorAll('.char-btn:not(.used)').forEach(btn => {
+  btn.addEventListener('click', function() {
+    if (!this.classList.contains('used')) {
+      document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
+      this.classList.add('selected');
+      charSelected = true;
+      // Fill the blank visual
+      const blanks = document.querySelectorAll('.quiz-blank:not(.quiz-blank-filled)');
+      if (blanks.length > 0) {
+        blanks[0].textContent = this.textContent;
+        blanks[0].classList.add('quiz-blank-filled');
+      }
+    }
+  });
+});
+
+function submitAnswer() {
+  if (!charSelected) {
+    showToast('请先选择一个答案');
+    return;
+  }
+  const explainEl = document.getElementById('quizExplain');
+  explainEl.classList.add('show');
+  showToast('✓ 回答正确！');
+  setTimeout(() => navigateTo('page-result'), 1500);
+}
+
+// Plan selection
+function selectPlan(card) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  const priceVal = card.querySelector('.plan-price-val');
+  const btn = document.querySelector('.iap-buy-area .btn-gold');
+  if (priceVal && btn) {
+    btn.textContent = `立即购买 ${priceVal.textContent}`;
+  }
+}
+
+// Toast notification
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// Page nav highlight
+function highlightNav(el) {
+  document.querySelectorAll('.pnav-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Auto-advance from launch screen
+setTimeout(() => {
+  if (currentPageId === 'page-launch') {
+    navigateTo('page-login');
+  }
+}, 2200);
+
+// Toggle page nav (double-tap phone frame to show)
+document.getElementById('phoneFrame').addEventListener('dblclick', () => {
+  const nav = document.getElementById('pageNav');
+  nav.style.display = nav.style.display === 'none' ? 'flex' : 'none';
+});
+</script>
+
+</body>
+</html>
